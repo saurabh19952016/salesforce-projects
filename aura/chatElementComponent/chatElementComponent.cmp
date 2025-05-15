@@ -1,0 +1,64 @@
+<aura:component controller="screenRecorderChatController" extends="c:getPromiseLightning" access="global">
+    <aura:attribute name="chatType" type="String"/>
+    <aura:attribute name="chatText" type="String"/>
+    <aura:attribute name="Note" type="String"/>
+    <aura:attribute name="btnName" type="String"/>
+    <aura:attribute name="started" type="Boolean" default="false"/>
+    <aura:attribute name="radio" type="Boolean" default="false"/>
+    <aura:attribute name="capture" type="Boolean" default="false"/>
+    <aura:attribute name="optionRaw" type="String" default=""/>
+   <aura:attribute name="options" type="List" default="[
+                                                        {'label': 'Salesforce', 'value': 'createCase'},
+                                                        {'label': 'Service Now', 'value': 'sendToSnow'}
+                                                        ]"/>
+    <aura:attribute name="isAttachment" type="Boolean" default="false"/>
+    <aura:attribute name="responseList" type="List"/>
+    <aura:attribute name="traceFlagId" type="String"/>
+    <aura:attribute name="time" type="string"/>
+    <aura:registerEvent name="captureLogEvent" type="c:captureLogEvent"/>
+    <aura:registerEvent name="radioSelectEvent" type="c:radioSelectEvent"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <li class="{!'slds-chat-listitem slds-p-around--small slds-chat-listitem_' + v.chatType }">
+        <div class="slds-chat-message">
+            <span aria-hidden="true" class="slds-avatar slds-avatar_circle slds-chat-avatar">
+                <lightning:icon iconName="{!v.chatType=='outbound'?'standard:user':'custom:custom100'}"/>
+            </span>
+            <div class="slds-chat-message__body">
+                <div class="{!'slds-chat-message__text slds-chat-message__text_' +  v.chatType}">
+                    <span class="slds-p-right--small">
+                        <aura:if isTrue="{!v.isAttachment==true}">
+                            <lightning:icon iconName="doctype:video"/>
+                        </aura:if>
+                        <aura:if isTrue="{!v.chatType=='delivery-failure'}">
+                            <lightning:icon iconName="utility:error"/>
+                        </aura:if>
+                    </span>
+                    <span>{!v.chatText}</span>
+                    <aura:if isTrue="{!v.Note!=null}">
+                        <br/><span class="slds-text-title_bold slds-p-top--small">NOTE : {!v.Note}</span>
+                    </aura:if>  
+                    <aura:if isTrue="{!v.radio==true}">
+                        <lightning:radioGroup variant="label-hidden" type="button" label="Radio Group"
+                                              options="{!v.options}"
+                                              onchange="{!c.handleRadioChange}"/>
+                    </aura:if>
+                </div> 
+                <div class="slds-chat-message__meta">{!v.time}</div>
+            </div>
+        </div>
+    </li>
+    
+    <aura:if isTrue="{!v.capture==true}">
+        <li class="{!'slds-chat-listitem slds-p-around--small slds-chat-listitem_' + v.chatType}">
+            <aura:if isTrue="{!v.started==false}">
+                <lightning:button name="createOnly" label="Create Case/ Incident Only" onclick="{!c.createCase}" iconName="utility:record_create"/>
+               <lightning:button name="logOnly" label="Capture Logs Only" onclick="{!c.captureLogs}" iconName="utility:list"/>
+                <lightning:button name="recordScreen" label="Capture Logs and record Screen"  iconName="utility:record" onclick="{!c.captureLogs}"/>
+            </aura:if>
+            <aura:if isTrue="{!v.started==true}">
+                <lightning:button label="Stop" variant="destructive" onclick="{!c.stopCapture}"  iconName="utility:stop"/>
+            </aura:if>
+        </li>
+    </aura:if>
+    
+</aura:component>

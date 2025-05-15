@@ -1,0 +1,96 @@
+<aura:component controller="screenRecorderChatController" extends="c:getPromiseLightning">
+    <aura:attribute name="response" type="Map" default="{}"/>
+    <aura:attribute name="reply" type="Object"/>
+    <aura:attribute name="currentText" type="string"/>
+    <aura:attribute name="currentUser" type="Object"/>
+    <aura:attribute name="chatStarted" type="Boolean"/>
+    <aura:attribute name="disabled" type="Boolean" default="false"/>
+    <aura:attribute name="fileUpload" type="Boolean" default="false"/>
+    <aura:attribute name="fileName" type="String"/>
+    <aura:attribute name="apiName" type="String"/>
+    <aura:attribute name="typing" type="Boolean" default="true"/>
+    <aura:attribute name="goBack" type="Boolean" default="false"/>
+    <aura:attribute name="chatMetadata" type="List"/>
+    <aura:attribute name="docIds" type="List"/>
+    <aura:attribute name="methodToCall" type="String"/>
+    <aura:attribute name="scrollHeight" type="String"/>
+    <aura:handler event="c:captureLogEvent" action="{!c.handleEvent}"/>
+    <aura:handler name="radioSelectEvent" event="c:radioSelectEvent" action="{!c.handleRadioSelect}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <div class="slds-grid slds-wrap">
+        <div class="slds-size_1-of-1">
+            <section role="log" class="slds-chat">
+                <ul class="slds-chat-list slds-border_bottom slds-border_left slds-border_right slds-border_top">
+                    <li class="slds-chat-listitem slds-chat-listitem_bookend bookend">
+                        <div class="slds-chat-bookend">
+                            <p class="slds-text-title_caps"  style="color:white;">
+                                <span aria-hidden="true" class="slds-avatar slds-avatar_circle slds-chat-avatar">
+                                    <lightning:icon iconName="standard:live_chat_visitor"/>
+                                </span>
+                                <b>Welcome to Customer Support</b></p>
+                        </div>
+                    </li>
+                    <div aura:id="chat" class="slds-scrollable_y" style="height:300px">
+                        {!v.body}
+                        <li class="{!v.goBack==true ?'slds-p-around--small slds-chat-listitem slds-chat-listitem_inbound':'slds-hide'}">
+                            <div class="slds-chat-message">
+                                <span aria-hidden="true" class="slds-avatar slds-avatar_circle slds-chat-avatar">
+                                    <lightning:icon iconName='custom:custom100'/>
+                                </span>
+                                <div class="slds-chat-message__body slds-chat-message__text slds-chat-message__text_inbound">
+                                    <a  onclick="{!c.goBack}">Go Back</a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="{!v.typing==true ?'slds-p-around--small slds-chat-listitem slds-chat-listitem_inbound':'slds-hide'}">
+                            <div class="slds-chat-message">
+                                <span aria-hidden="true" class="slds-avatar slds-avatar_circle slds-chat-avatar">
+                                    <lightning:icon iconName='custom:custom100'/>
+                                </span>
+                                <div class="slds-chat-message__body">
+                                    <div class="slds-chat-message__text slds-chat-message__text_inbound">
+                                        <span class="slds-icon-typing slds-is-animated">
+                                            <span class="slds-icon-typing__dot"></span>
+                                            <span class="slds-icon-typing__dot"></span>
+                                            <span class="slds-icon-typing__dot"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </div>
+                    <li class="slds-chat-listitem slds-chat-listitem_bookend bookend2">
+                        <div class="slds-chat-bookend slds-chat-bookend_stop slds-align_absolute-center">
+                            <aura:if isTrue="{!empty(v.chatMetadata) &amp;&amp; v.chatStarted}">
+                                <span aria-hidden="true" class="slds-avatar slds-avatar_circle slds-chat-avatar">
+                                    <lightning:icon iconName="utility:stop"/>
+                                </span>
+                                <p class="slds-text-title_caps"  style="color:white;"><b>Chat ended.</b></p>
+                                <aura:set attribute="else">
+                                    <aura:if isTrue="{!v.fileUpload}">
+                                        <div aura:id="filesSection">
+                                            <lightning:input aura:id="fileId" onchange="{!c.handleFilesChange}" disabled="{!v.disabled}" type="file" name="file" label="Upload Recorded file" multiple="false"/>
+                                            <div class="slds-text-body_small">{!v.fileName} </div>
+                                        </div>
+                                        
+                                        <aura:set attribute="else">
+                                               <aura:if isTrue="{!v.apiName!=null}">
+                                             <c:chatSearchComponent apiName="{!v.apiName}" IconName="standard:groups" selected="{!v.reply}" method="{!'c.' + v.methodToCall + 'GetGroup'}"/>
+                                                <aura:set attribute="else"> 
+                                                    <lightning:textarea class="slds-size--small" disabled="{!v.disabled}" variant="label-hidden" type="text" value="{!v.reply}"/>
+                                                  </aura:set>
+                                           </aura:if> 
+                                            <lightning:buttonIcon class="slds-m-around--small" disabled="{!v.reply==null || v.reply=='' || v.disabled==true}" iconName="utility:send" variant="border-inverse" alternativeText="Send" title="Send" onclick="{!c.sendAction}" />
+                                            
+                                        </aura:set>
+                                    </aura:if>
+                                </aura:set>
+                            </aura:if>                                        
+                        </div>
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </div>
+    
+</aura:component>

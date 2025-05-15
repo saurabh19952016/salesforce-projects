@@ -1,0 +1,55 @@
+<aura:component implements="flexipage:availableForAllPageTypes" access="global" extends="c:getPromiseLightning" controller="ScreenRecorderCustomSettingController">
+    <aura:attribute name="apiSettingMap" type="Map" default="{}"/>
+    <aura:attribute name="creationEndpoint" type="String" default="Target environment incident Creation endpoint"/>
+    <aura:attribute name="incCreator" type="String" default="Incident creator user Identifier in target environment"/>
+    <aura:attribute name="commentField" type="String" default="Name of the field to save the file links in target environment"/>
+    <aura:attribute name="incNumber" type="String" default="Incident number field in response after creation"/>
+    <aura:attribute name="groupEndpoint" type="String" default="Target environment group retrieval api endpoint"/>
+    <aura:attribute name="groupId" type="String" default="Target environment group Id key in response"/>
+    <aura:attribute name="groupName" type="String" default="Target environment group Name key in response"/>
+    <aura:attribute name="defaultgroup" type="String" default="Target environment default group Id"/>
+    <aura:attribute name="salesforceGroup" type="String" default="Salesforce group Id"/>
+    <aura:attribute name="userEndpoint" type="String"/>
+    <aura:attribute name="userIdField" type="String" default="User field name from salesforce to be mapped to target environment user Id"/>
+    <aura:attribute name="userIdKey" type="String" default="Target environment user Id key in response"/>
+    <aura:attribute name="debugLevel" type="String" default="default debug level Id for setting the trace flag"/>
+    <aura:attribute name="libraryName" type="String" default="default libary name to store the logs and recording"/>
+    <aura:attribute name="deletionInterval" type="String" default="logs and recording file deletion interval"/>
+    <aura:attribute name="alertNote" type="String" default="File deletion alert note"/>
+    <aura:attribute name="sfdcField" type="String" default="Field name where the alert needs to be added (Salesforce)"/>
+    <aura:attribute name="targetField" type="String" default="Field name where the alert needs to be added (Target Environment)"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <lightning:card title="API and storage settings" iconName="standard:settings">
+        <aura:set attribute="actions">
+            <lightning:button class="slds-m-around--medium" onclick="{!c.handleSave}" variant="brand" label="Save"/>
+        </aura:set>
+        <div class="slds-p-around--small slds-is-relative">
+            Create a named credentials using the below link to store the authentication details for the target environment.
+            Fill all the API Names below in the format of <b>callout:{Named Credential Name}/endpoint</b>
+                    <lightning:button label="Create Named Credentials" class="{!v.isStandalone?'slds-hide':'slds-show'}" name="/lightning/setup/NamedCredential/home" variant="base" onclick="{!c.openNamedCredentialTab }" />
+            <lightning:spinner aura:id="spinner" variant="brand"></lightning:spinner>
+            <div class="slds-scrollable_y" style="height:500px">
+                <lightning:input class="slds-m-around--small" aura:id="API_creation_endpoint" label="{!v.creationEndpoint}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_Caller_Id_Field"  label="{!v.incCreator}"  onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_comments" label="{!v.commentField}"  onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_incidentNumber" label="{!v.incNumber}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_getGroup_endpoint" label="{!v.groupEndpoint}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_group_Id" label="{!v.groupId}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_group_name" label="{!v.groupName}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_default_group" label="{!v.defaultgroup}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="Salesforce_default_group" label="{!v.salesforceGroup}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_getUser_endpoint" label="{!v.userEndpoint}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="targetEnvUserMappingField" label="{!v.userIdField}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="API_user_Id" label="{!v.userIdKey}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="debugLevelId" label="{!v.debugLevel}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="libraryName"  label="{!v.libraryName}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="file_deletion_Interval"  label="{!v.deletionInterval}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="recorded_video_alert_note" label="{!v.alertNote}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="recordedVidAlertSFDC_FieldName" label="{!v.sfdcField}" onchange="{!c.handleChange}"/>
+                <lightning:input class="slds-m-around--small" aura:id="recordedVidAlertTarget_FieldName" label="{!v.targetField}" onchange="{!c.handleChange}"/>
+            </div>
+        </div>
+        
+    </lightning:card>
+    
+</aura:component>

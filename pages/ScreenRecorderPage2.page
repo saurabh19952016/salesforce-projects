@@ -1,0 +1,229 @@
+<apex:page showHeader="false" docType="html-5.0" lightningStylesheets="true" >
+    <html lang="en" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+            <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+            <apex:includeScript value="{!$Resource.RecordRTC}"/>
+                <apex:includeScript value="{!$Resource.getHTMLMediaElement}"/>
+                    <apex:includeLightning />
+
+                    </head>
+                    <body>
+                        <div id="chat"/>
+                            <button id="btn-start-recording" style="visibility:hidden;height:0px;width:0px;" type="button">Start Recording</button>            
+                            </body>
+                            </html>
+                            <script>
+                                $Lightning.use("c:screenRecorderChatApplication", function() {
+                                    $Lightning.createComponent("c:screenRecorderChatComponent",
+                                                               { 
+                                                                   
+                                                               },
+                                                               "chat",
+                                                               function(cmp) {
+                                                                   
+                                                                   console.log('completed');
+                                                                   $A.eventService.addHandler({ "event": "c:captureLogEvent", "handler" : captureLogs});
+                                                               });
+                                });
+            var captureLogs = function(event)
+            {
+                var op=event.getParam("operation");
+                var action=event.getParam("action"); 
+                if((op=='recordScreen' && action=='start') || (op=='recordScreen' && action=='stopCapture')){
+                    document.getElementById("btn-start-recording").click();
+                }
+            };   
+            var btnStartRecording = document.querySelector('#btn-start-recording');
+            var mimeType = 'video/mp4';
+            var fileExtension = 'mp4';
+            var type = 'video';
+            var recorderType;
+            var defaultWidth;
+            var defaultHeight;           
+            /*window.onbeforeunload = function() {
+                        btnStartRecording.disabled = false;
+                        mediaContainerFormat.disabled = false;
+                    };*/
+            var video = document.createElement('video');
+            video.controls = false;
+            var mediaElement = getHTMLMediaElement(video, {
+                            title: 'Recording status: inactive',
+                            buttons: ['full-screen'/*, 'take-snapshot'*/],
+                            showOnMouseEnter: false,
+                            width: 360,
+                           onTakeSnapshot: function() {
+                                var canvas = document.createElement('canvas');
+                                canvas.width = mediaElement.clientWidth;
+                                canvas.height = mediaElement.clientHeight;
+                                var context = canvas.getContext('2d');
+                                context.drawImage(recordingPlayer, 0, 0, canvas.width, canvas.height);
+                                window.open(canvas.toDataURL('image/png'));
+                            }
+                        });
+                        var div = document.createElement('section');
+                        mediaElement.media.parentNode.appendChild(div);
+                        mediaElement.media.muted = false;
+                        mediaElement.media.autoplay = true;
+                        mediaElement.media.playsinline = true;
+                        div.appendChild(mediaElement.media);
+                        
+                        var recordingPlayer = mediaElement.media;
+
+            btnStartRecording.onclick = function(event) {
+                var button = btnStartRecording;
+                if(button.innerHTML === 'Start Recording') {
+                    //setTraceFlag();                    
+                }
+                if(button.innerHTML === 'Stop Recording') {
+                    // getDebugLogAndDelete(false);
+                    button.innerHTML = 'Start Recording';
+                    
+                    if(button.recordRTC) {
+                        if(button.recordRTC.length) {
+                            button.recordRTC[0].stopRecording(function(url) {
+                                if(!button.recordRTC[1]) {
+                                    button.recordingEndedCallback(url);
+                                    saveToDiskOrOpenNewTab(button.recordRTC[0]);
+                                    return;
+                                }
+                                button.recordRTC[1].stopRecording(function(url) {
+                                    button.recordingEndedCallback(url);
+                                });
+                            });
+                        }
+                        else {
+                            button.recordRTC.stopRecording(function(url) {
+                                if(button.blobs && button.blobs.length) {
+                                    var blob = new File(button.blobs, getFileName(fileExtension), {
+                                        type: 'video/mp4'
+                                    });
+                                    
+                                    button.recordRTC.getBlob = function() {
+                                        return blob;
+                                    };
+                                    url = URL.createObjectURL(blob);
+                                }
+                                
+                                button.recordingEndedCallback(url);
+                                saveToDiskOrOpenNewTab(button.recordRTC);
+                            });
+                        }
+                    }
+                    return;
+                }
+                if(!event) return;
+                var commonConfig = {
+                    onMediaCaptured: function(stream) {
+                        button.stream = stream;
+                        if(button.mediaCapturedCallback) {
+                            button.mediaCapturedCallback();
+                        }
+                        button.innerHTML = 'Stop Recording';
+                    },
+                    onMediaStopped: function() {
+                        button.innerHTML = 'Start Recording';
+                        if(!button.disableStateWaiting) {
+                        }
+                    },
+                    onMediaCapturingFailed: function(error) {
+                        console.error('onMediaCapturingFailed:', error);
+                        if(error.toString().indexOf('no audio or video tracks available') !== -1) {
+                            alert('RecordRTC failed to start because there are no audio or video tracks available.');
+                        }
+                        
+                        if(error.name === 'PermissionDeniedError' && DetectRTC.browser.name === 'Firefox') {
+                            alert('Firefox requires version >= 52. Firefox also requires HTTPs.');
+                        }
+                        commonConfig.onMediaStopped();
+                    }
+                };
+                
+                
+                captureScreen(commonConfig);
+                button.mediaCapturedCallback = function() {
+                    var options = {
+                        type: type,
+                        mimeType: mimeType,
+                        disableLogs:  false,
+                        getNativeBlob: false, // enable it for longer recordings
+                        video: {width:0,height:0}
+                    };
+                    options.videoBitsPerSecond = 30;
+                    options.ignoreMutedMedia = false;
+                    button.recordRTC = RecordRTC(button.stream, options);
+                    button.recordingEndedCallback = function(url) {
+                    };
+                    button.recordRTC.startRecording();
+                };
+                // note: audio+tab is supported in Chrome 50+
+                // todo: add audio+tab recording
+                
+            };         
+            
+            function saveToDiskOrOpenNewTab(recordRTC) {
+                if(!recordRTC.getBlob().size) {
+                    console.log('blob', recordRTC.getBlob());
+                    console.log('recordrtc instance', recordRTC);
+                    console.log('report', info);
+                }
+                var fileName = getFileName(fileExtension);
+                if(!recordRTC) return alert('No recording found.');
+                var file = new File([recordRTC.getBlob()], fileName, {
+                    type: mimeType
+                });
+                console.log(recordRTC.getBlob());
+      
+        console.log(URL.createObjectURL(file));  
+        invokeSaveAsDialog(file, file.name);
+        //saveDebugLogs();                    
+        // upload to PHP server
+        
+    }
+            function getRandomString() {
+                if (window.crypto && window.crypto.getRandomValues && navigator.userAgent.indexOf('Safari') === -1) {
+                    var a = window.crypto.getRandomValues(new Uint32Array(3)),
+                        token = '';
+                    for (var i = 0, l = a.length; i < l; i++) {
+                        token += a[i].toString(36);
+                    }
+                    return token;
+                } else {
+                    return (Math.random() * new Date().getTime()).toString(36).replace(/\./g, '');
+                }
+            }
+            function getFileName(fileExtension) {
+                var d = new Date();
+                var year = d.getUTCFullYear();
+                var month = d.getUTCMonth();
+                var date = d.getUTCDate();
+                return 'Recorder-' + year + month + date + '-' + getRandomString() + '.' + fileExtension;
+            }
+            
+            
+            function captureScreen(config) {
+                if (navigator.getDisplayMedia) {
+                    navigator.getDisplayMedia({
+                        video: true
+                    }).then(screenStream => {
+                        config.onMediaCaptured(screenStream);
+                    }).catch(function(error) {
+                        config.onMediaCapturingFailed(error);
+                    });
+                    } else if (navigator.mediaDevices.getDisplayMedia) {
+                        navigator.mediaDevices.getDisplayMedia({
+                        video: true
+                    }).then(screenStream => {
+                        config.onMediaCaptured(screenStream);
+                    }).catch(function(error) {
+                        config.onMediaCapturingFailed(error);
+                    });
+                    } else {
+                        var error = 'getDisplayMedia API are not supported in this browser.';
+                        config.onMediaCapturingFailed(error);
+                        alert(error);
+                    }
+                    }
+                        </script>   
+        </apex:page>

@@ -1,0 +1,4 @@
+<aura:event type="COMPONENT" description="Event template">
+    <aura:attribute name="methodToCall" type="String"/>
+    <aura:attribute name="buttonName" type="String"/>
+</aura:event>

@@ -1,0 +1,3 @@
+<design:component>
+	   <design:attribute name="environmentName" label="Environment Name" dataSource="Salesforce,Target Environment"/>
+</design:component>

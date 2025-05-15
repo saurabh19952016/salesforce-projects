@@ -1,0 +1,36 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global" extends="c:getPromiseLightning" controller="AddingMetadata">
+    <aura:attribute name="data" type="list"/>
+    <aura:attribute name="columns" type="List"/> 
+    <aura:attribute name="dataMap" type="Map"/>     
+    <!-- handlers-->
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    
+    <lightning:card title="Chat Instruction Settings" iconName="standard:live_chat">
+        <aura:set attribute="actions">
+            <lightning:button class="slds-m-around--medium" onclick="{!c.addRows}" iconName="utility:add" label="Add Row"/>
+        </aura:set>
+        <div class="slds-p-around--small slds-card" style="width:700px; justify-content:space-between">
+            <b>Note: </b>            
+            <ol class="slds-list_dotted menu">
+                <li>Add the instructions, Note to be displayed to the user and control the order of display</li>
+                 <li>You can add {!fullName} as a merge field where the user name should be visible (Only applicable for the first record)</li>
+                <li>SFDC Field Name and Target Field Name should be used for steps where a user response is expected (subject,description etc)</li>
+                <li>Environment Selection checkbox is used to select the step at which the user can select the environment (Salesforce/ Target). At this option the <b>SFDC Field Name</b> and <b>Target Field Name</b> serve as the Button names. Leaving any of these field blank for this selection will show only one button.</li>
+                <li>Group Selection checkbox is used to specify at what step user can select the assignment group</li>
+                <li>Screen Capture checkbox is used to specify at what step user can submit the Issue with/ without recording</li>
+                <li>You can add {!incidentNumber} as a merge field where the incident/ case number should be shown (Only applicable for the last record)</li>
+                <li><b>Please note that the records cant be deleted after creation. Although it can be edited.</b></li>
+           </ol>
+        </div>
+        
+        <div class="slds-scrollable--y slds-is-relative" style="height:500px" >
+            <lightning:spinner aura:id="spinner" variant="brand"/>
+            <lightning:datatable aura:id="table" columns="{! v.columns }"
+                                 data="{! v.data }"
+                                 keyField="id"
+                                 onsave="{!c.handleSave}"
+                                 onrowaction="{! c.deleteRow }"
+                                 hideCheckboxColumn="true"/>
+        </div>
+    </lightning:card>
+</aura:component>

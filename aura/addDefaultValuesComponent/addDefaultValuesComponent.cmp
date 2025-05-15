@@ -1,0 +1,22 @@
+<aura:component implements="flexipage:availableForAllPageTypes" access="global" extends="c:getPromiseLightning" controller="ScreenRecorderCustomSettingController">
+    <aura:attribute name="environmentName" type="String"/>
+    <aura:attribute name="settingList" type="List"/>
+    <aura:attribute name="columns" type="List"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <lightning:card title="{!'Default Values ' +  v.environmentName}" iconName="custom:custom18">
+        <aura:set attribute="actions">
+            <lightning:button class="slds-m-around--medium" onclick="{!c.addRows}" iconName="utility:add" label="Add Row"/>
+        </aura:set>
+        <div class="slds-p-around--small slds-is-relative">
+            <lightning:spinner aura:id="spinner" variant="brand"></lightning:spinner>
+            <div class="slds-scrollable_y" style="height:590px">
+            <lightning:datatable aura:id="table" columns="{! v.columns }"
+                                 data="{! v.settingList }"
+                                 hideCheckboxColumn="true"
+                                 keyField="Id"
+                                 onsave="{!c.handleSave}"
+                                 onrowaction="{!c.deleteRow}"/>
+            </div>
+        </div>
+    </lightning:card>
+</aura:component>
