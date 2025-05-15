@@ -1,0 +1,15 @@
+<aura:component implements="flexipage:availableForAllPageTypes" access="global" >
+	<div class="slds-theme--default slds-m-around--small" style="min-height:500px">
+    <lightning:tabset variant="scoped" selectedTabId="download">
+       <lightning:tab class="slds-text-title_bold" label="Download Metadata CSV" id="download" >
+           <c:MetadataDownloadComponent/>
+        </lightning:tab>
+        <lightning:tab class="slds-text-title_bold" label="Upload CSV for Activation" id="upload">
+          <c:MetadataUploadComponent/>
+        </lightning:tab>
+        <lightning:tab class="slds-text-title_bold" label="History" id="history">
+          <c:DownloadHistoryComponent/>
+        </lightning:tab>
+    </lightning:tabset>
+    </div>
+</aura:component>

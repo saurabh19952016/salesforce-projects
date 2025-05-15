@@ -1,0 +1,39 @@
+<aura:component controller="ArchivalHelperController">
+    <aura:attribute name="data" type="List"/>
+    <aura:attribute name="xAxisCategories" type="List"/>
+    <aura:attribute name="columns" type="List"/>
+    
+    <ltng:require scripts="{!$Resource.highCharts}" afterScriptsLoaded="{!c.init}"/>
+    <lightning:layout multipleRows="true">
+        <lightning:layoutItem size="12" padding="around-small">
+            
+            <lightning:card title="DASHBOARD"  iconName="standard:dashboard">
+                <lightning:layout multipleRows="true">
+                    
+                    <lightning:layoutItem size="6" padding="around-small">
+                        <lightning:card title="">
+                            <div aura:id="chart"/>
+                        </lightning:card>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="6" padding="around-small">
+                        <lightning:card title="">
+                            
+                            <div aura:id="linechart"/>
+                        </lightning:card>
+                        
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </lightning:card>
+        </lightning:layoutItem>
+        <lightning:layoutItem size="12" padding="around-small">
+            <lightning:card title="REPORT" iconName="standard:report">
+                
+                <lightning:datatable
+                                     keyField="name"
+                                     data="{! v.data }"
+                                     columns="{! v.columns }"
+                                     hideCheckboxColumn="true"/>
+            </lightning:card>
+        </lightning:layoutItem>
+    </lightning:layout>
+</aura:component>

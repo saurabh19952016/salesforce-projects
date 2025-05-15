@@ -1,0 +1,25 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes"  controller="mainApplicationController">
+    <aura:attribute name="tab" type="string" default="CSBack"/>
+    <aura:attribute name="showTabs" type="Boolean"/>
+    <aura:handler event="c:authSuccessEvent" action="{!c.doInit}"/>
+    
+    <aura:if isTrue="{!v.showTabs}">
+
+    <lightning:tabset class="slds-p-around--small"  selectedTabId="{!v.tab}" variant="scoped">
+    <lightning:tab label="Custom Settings backup" id="CSBack" iconName="utility:settings">
+    <c:customSettingBackupComponent/>
+    </lightning:tab>
+    <lightning:tab label="Metadata Backup" id="metBack" iconName="utility:apex">
+            <c:metadataBackupComponent/>
+        </lightning:tab>
+        <lightning:tab label="Obscure/ Anonymize data" id="PID" iconName="utility:remove_link">
+    <c:personalInfoComponent />
+    </lightning:tab>
+    <lightning:tab label="Delete all Jobs" id="delete" iconName="utility:delete">
+        <c:deleteJobComponent />
+        </lightning:tab>
+    
+    </lightning:tabset>
+</aura:if>
+
+</aura:component>

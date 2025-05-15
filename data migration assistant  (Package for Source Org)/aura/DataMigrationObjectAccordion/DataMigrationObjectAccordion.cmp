@@ -1,0 +1,55 @@
+<aura:component >
+    <aura:attribute name="objList" type="List"/>
+    <!--  <aura:attribute name="ChildList" type="List"/> -->
+    <aura:attribute name="isPicklist" type="Boolean"/>
+    
+    <!--<aura:attribute name="activeSectionsChild" type="List"/> -->
+    <aura:attribute name="activeSectionsAccordion" type="List"/>
+     <aura:attribute name="activePicklistAccordion" type="List"/>
+   <aura:handler event="c:PrintEvent" action="{!c.handlePrint}"/>
+    <aura:if isTrue="{!v.isPicklist==false}">
+        
+        <lightning:accordion aura:id="parentObj"  allowMultipleSectionsOpen="true" activeSectionName="{!v.activeSectionsAccordion}">
+            <lightning:layout multipleRows='true'>
+                <aura:iteration items="{!v.objList}"  var="obj" indexVar="key">
+                    <lightning:layoutItem size="12">
+                        <div class="slds-card">
+                            <lightning:accordionSection name="{!obj.key}" label="{!obj.key}">
+                                {!obj.ObjectWrapList}
+                                <c:DataMigrationTableComponent ObjectList="{!obj.value.ObjectWrapList}"/>
+                            </lightning:accordionSection>
+                        </div>
+                    </lightning:layoutItem>
+                </aura:iteration>
+            </lightning:layout>
+        </lightning:accordion>
+        
+    </aura:if>
+    <aura:if isTrue="{!v.isPicklist==true}">
+        <lightning:accordion aura:id="picklist" allowMultipleSectionsOpen="true" activeSectionName="{!v.activePicklistAccordion}">
+            <lightning:layout multipleRows='true'>
+                <aura:iteration items="{!v.objList}"  var="obj">  
+                    <lightning:layoutItem size="12">
+                        <div class="slds-card">
+                            <lightning:accordionSection name="{!obj.objectName + '.' + obj.fieldName}" label="{!obj.objectName + '.' + obj.fieldName}">
+                                <b>Object Name :</b> {!obj.objectName}    <br/>                                
+                                <b>Field Name : </b>{!obj.fieldName}     <br/>                                 
+                                <b>Target Org Field Name :</b> {!obj.fieldNameTarget} <br/>
+                                <lightning:layout>
+                                    <lightning:layoutItem size="6">
+                                        <b>Current Org Values</b>
+                               			 <c:DataMigrationTableComponent jsonPicklistString="{!obj.picklistCurrent}"/>
+                                    </lightning:layoutItem>	
+                                    <lightning:layoutItem size="6">
+                                        <b>Target Org Values</b>
+                                		<c:DataMigrationTableComponent jsonPicklistString="{!obj.picklistTarget}"/>
+                                    </lightning:layoutItem>	
+                                </lightning:layout>
+                            </lightning:accordionSection>
+                        </div>
+                    </lightning:layoutItem>
+                </aura:iteration>
+            </lightning:layout>
+        </lightning:accordion>
+    </aura:if> 
+</aura:component>

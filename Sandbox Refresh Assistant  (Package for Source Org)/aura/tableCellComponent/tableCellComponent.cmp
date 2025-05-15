@@ -1,0 +1,44 @@
+<aura:component>
+<aura:attribute name="record" type="Object"/>
+<aura:attribute name="field" type="Object"/>    
+<aura:attribute name="cellValue" type="Object"/>
+<aura:attribute name="isCurrentOrg" type="Boolean" default="true"/>
+<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+<aura:if isTrue="{!v.isCurrentOrg || !v.field.updateable}">
+        <td class="" scope="col">
+             <div class="slds-truncate">
+                <aura:if isTrue="{!v.field.fieldType=='text' || v.field.fieldType=='number'}">
+                    <ui:outputText value="{!v.cellValue}"/>
+                </aura:if>
+                <aura:if isTrue="{!v.field.fieldType=='date'}">
+                    <ui:outputDate value="{!v.cellValue}"/>
+                </aura:if>
+                <aura:if isTrue="{!v.field.fieldType=='datetime'}">
+                    <ui:outputDateTime value="{!v.cellValue}"/>
+                </aura:if>
+            </div>
+        </td>
+    <aura:set attribute="else">
+   
+        <td class="" scope="col">
+            <div class="slds-truncate">
+                <aura:if isTrue="{!v.isCurrentOrg}">
+                    <aura:if isTrue="{!v.field.fieldType=='text' || v.field.fieldType=='number'}">
+                        <ui:outputText value="{!v.cellValue}"/>
+                    </aura:if>
+                    <aura:if isTrue="{!v.field.fieldType=='date'}">
+                        <ui:outputDate value="{!v.cellValue}"/>
+                    </aura:if>
+                    <aura:if isTrue="{!v.field.fieldType=='datetime'}">
+                        <ui:outputDateTime value="{!v.cellValue}"/>
+                    </aura:if>
+                    <aura:set attribute="else">
+                        <lightning:input type="{!v.field.fieldType}" value="{!v.cellValue}" class="slds-size_medium" onchange="{!c.handleChange}"/>
+                    </aura:set>
+                </aura:if>
+            </div>
+        </td>
+    </aura:set>
+</aura:if>
+</aura:component>

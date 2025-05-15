@@ -1,0 +1,45 @@
+<aura:component controller="customSettingBkpController">
+    <aura:attribute name="items" type="List"/>
+    <aura:attribute name="isMetadata" type="Boolean" default="false"/>
+    <aura:attribute name="message" type="String"/>
+    <aura:attribute name="type" type="String"/>
+        <aura:attribute name="label" type="String"/>
+    <aura:attribute name="targetBaseUrl" type="String"/>
+    <aura:registerEvent name="fileSizeEvent" type="c:fileSizeEvent"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+ 
+    <lightning:card  iconName="standard:document" class="slds-card_boundary">
+        <div aura:id="message" class="slds-hide">  
+            <div  class="{!'slds-box slds-theme_alert-texture slds-theme--' + v.type}"  role="alert">
+                <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium"/>&nbsp;
+                <span class="slds-text-body–regular">
+                    <aura:unescapedHtml value="{!v.message}"/>
+                </span> 
+            </div>
+        </div> 
+           <aura:set attribute="title">
+        <p class="slds-cell-wrap">Backups saved</p>
+    </aura:set>
+    <aura:set attribute="actions">
+            <lightning:buttonGroup >
+                <lightning:button name="{!v.label}" onclick="{!c.clearBackup}" label="{!'Delete ' + v.label}"/>
+                <lightning:button name="All" onclick="{!c.clearBackup}" label="Delete All backup"/>
+            </lightning:buttonGroup>
+            </aura:set>
+        <div class="slds-p-around--medium slds-border_top slds-scrollable slds-is-relative" style="height:300px;">
+            <lightning:spinner aura:id="spinner" class="slds-hide"/> 
+            <aura:iteration items="{!v.items}" var="content">
+                <lightning:tile  label="{!content.Title}" href="{!v.targetBaseUrl + content.Id}">
+                    <aura:set attribute="media">
+                        <lightning:icon iconName="doctype:zip" alternativeText="{!content.Title}" size="large"/>
+                    </aura:set> 
+                    <ul class="slds-list_vertical">
+                        <li class="slds-item" >Version Number : {!content.VersionNumber}</li>
+                        <li class="slds-item">Downloaded By {!content.CreatedBy.Name} on <lightning:formattedDateTime value="{!content.CreatedDate}" year="numeric" month="short" day="2-digit" hour="numeric" minute="numeric"
+                                 weekday="long"/></li>
+                    </ul>
+                </lightning:tile>
+              </aura:iteration>
+        </div>
+    </lightning:card>
+</aura:component>

@@ -1,0 +1,10 @@
+.THIS .floating{
+    position:fixed;
+    z-index:3;
+    left:84%;
+}
+@media print{
+    .THIS .floating{
+    display:none;
+}
+}

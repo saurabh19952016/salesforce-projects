@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Email_Archival_Users</fullName>
+        <categories>Email Archival</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Archival Users</shortDescription>
+        <value>5</value>
+    </labels>
+    <labels>
+        <fullName>Email_query_limit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email query limit</shortDescription>
+        <value>5</value>
+    </labels>
+    <labels>
+        <fullName>FileDownloadBaseUrl</fullName>
+        <categories>Email Archival</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FileDownloadBaseUrl</shortDescription>
+        <value>https://hon-aero--c.documentforce.com</value>
+    </labels>
+    <labels>
+        <fullName>archival_year_limit</fullName>
+        <categories>Email Archival</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>archival_year_limit</shortDescription>
+        <value>2015</value>
+    </labels>
+    <labels>
+        <fullName>email_archival_recipients</fullName>
+        <categories>Email Archival</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>email archival recipients</shortDescription>
+        <value>Rathinam.Ayyappan@Honeywell.com;saurabh.shukla@nttdata.com;</value>
+    </labels>
+</CustomLabels>

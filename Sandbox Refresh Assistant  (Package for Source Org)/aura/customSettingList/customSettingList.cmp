@@ -1,0 +1,43 @@
+<aura:component>
+    <aura:attribute name="customSettings" type="List" />
+    <aura:attribute name="selectedObj" type="Object" />
+    <aura:attribute name="columns" type="List" />
+    <aura:attribute name="isOpen" type="Boolean" default="false"/>
+    <aura:attribute name="step" type="string" />
+    <aura:registerEvent name="mergeAll" type="c:mergeAllNotification"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="goToList" event="c:goToSettingListEvt" action="{!c.handleEvent}"/>
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <lightning:buttonIcon iconName="utility:close"
+                                        onclick="{! c.closeModel }"
+                                        alternativeText="close"
+                                        variant="bare-inverse"
+                                        class="slds-modal__close"/>
+                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Conflict Resolution</h2>
+            </header>
+            <div class="slds-modal__content slds-p-around_medium slds-theme_shade" id="modal-content-id-1">
+                <lightning:progressIndicator currentStep="{!v.step}" type="path" variant="base">
+                    <lightning:progressStep label="Select Custom Setting" value="1"/>
+                    <lightning:progressStep label="Resolve Conflict and Save" value="2"/>
+                </lightning:progressIndicator>
+                <div class="slds-p-around--small">
+                    <aura:if isTrue="{!v.step=='2'}">
+                        {!v.body}
+                        <aura:set attribute="else">
+                            <lightning:card title="Custom settings in uploaded file" class="slds-card_boundary">
+                                <aura:set attribute="actions">
+                                    <lightning:button label="Merge all" onclick="{!c.mergeAll}" variant="brand"/>
+                                </aura:set>
+                                <lightning:datatable class="slds-p-around--small" data="{!v.customSettings}" keyField="Name" columns="{!v.columns}"
+                                hideCheckboxColumn="true" onrowaction="{!c.getRecords}"/>
+                            </lightning:card>    
+                        </aura:set>
+                  </aura:if>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</aura:component>

@@ -1,0 +1,79 @@
+<aura:component controller="dataMigrationFormController">
+    <aura:attribute name="settings" type="Migration_Objects__c" default="{'sobjectType':'Migration_Objects__c'}"/>
+    <aura:attribute name="parentSetting" type="Migration_Objects__c"/>
+    <aura:attribute name="message" type="string"/>
+    <aura:attribute name="type" type="string"/>
+    <aura:attribute name="query" type="string"/>
+    <aura:attribute name="objectName" type="string"/>
+    <aura:attribute name="objectDetails" type="Object"/>
+    <aura:attribute name="selectedFields" type="List"/>  
+    <aura:attribute name="fieldList" type="List"/>    
+    <aura:attribute name="help" type="string" default="Select Object for migration."/>
+    <aura:registerEvent name="refreshParent" type="c:refreshParent"/>
+    <aura:handler name="clearValueEvent" event="c:clearValueEvent" action="{!c.clearFields}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.handleFieldEvent}"/>
+    <lightning:spinner aura:id="spinner" class="slds-hide" variant="brand"/>
+    <aura:if isTrue="{!v.settings.Object_type__c=='Child'}">
+        
+        <lightning:card title="{!'Data Migration ' + v.settings.objectName__c}" iconName="utility:database" class="card slds-card_boundary slds-m-around--medium">
+            <aura:set attribute="footer">
+                <lightning:button  disabled="{!v.settings.Status__c=='Completed' || v.settings.Status__c=='Running'}" class="{!v.settings.Id==null || v.settings.Id==''?'slds-hide':'slds-m-top--small'}" iconName="utility:rotate" onclick="{!c.runBatchClass}"
+                                  label="{!v.settings.Status__c=='Running'?'Batch Running':v.settings.Status__c=='Completed'?'Batch Completed':'Run Batch'}"/>              
+            </aura:set>
+            <div class="slds-p-around--small">
+                <c:searchComponent IconName="standard:sobject" selected="{!v.settings.objectName__c}" helptext="{!v.help}" label="Object Name"/>
+                <aura:if isTrue="{!v.settings.Id!=null &amp;&amp; v.settings.Status__c==null}">
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="6" padding="around-small">
+                            <lightning:dualListbox class="slds-p-top--small" name="FieldList"  
+                                                   label= "Select Fields to Display" 
+                                                   sourceLabel="Available" 
+                                                   selectedLabel="Selected" 
+                                                   value="{!v.selectedFields}" 
+                                                   options="{!v.fieldList}"/>
+                            <lightning:input class="slds-p-around--small" type="toggle" aura:id="checkbox" label="Select All Fields" onchange="{!c.onInputCheck}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="6" padding="around-small">
+                            <div class="slds-p-around--small slds-box slds-theme_warning">
+                                <p class="slds-text-title_bold">1. Filters should be in the format of ('value1','value2',..) for text types</p>
+                                <p class="slds-text-title_bold">2. Filters should be in the format of (value1,value2,..) for other types</p>
+                            </div>
+                            <c:FilterComponent fieldList="{!v.fieldList}" field="{!v.settings.FilterField_1__c}" value="{!v.settings.filterValue_1__c	}"/>
+                            <c:FilterComponent fieldList="{!v.fieldList}" field="{!v.settings.FilterField_2__c}" value="{!v.settings.filterValue_2__c}"/>
+                            <lightning:select class="slds-size_medium slds-p-around--small" name="select" value="{!v.settings.RecordType__c}" label="Select Record Type">
+                                <option text="All" value=""></option>
+                                <aura:iteration items="{!v.objectDetails.recordTypes}" var="recordType">
+                                    <option text="{!recordType}"></option>
+                                </aura:iteration>
+                            </lightning:select> 
+                        </lightning:layoutItem>	
+                    </lightning:layout>
+                </aura:if>
+            </div>
+            
+        </lightning:card>
+        <aura:set attribute="else">
+            <lightning:card title="{!v.settings.objectName__c}"  iconName="utility:database" class="card slds-card_boundary slds-p-around--medium">
+                <aura:set attribute="footer">
+                    <lightning:buttonGroup>
+                        <lightning:button  class="slds-m-top--small" iconName="utility:rotate" disabled="{!v.parentSetting.Status__c==null || v.parentSetting.Status__c=='Running' || v.settings.Status__c=='Running' || v.settings.Status__c=='Completed'}" onclick="{!c.runBatchClass}"
+                                          label="{!v.settings.Status__c=='Running'?'Batch Running':v.settings.Status__c=='Completed'?'Batch Completed':'Run Batch'}"/>
+                        <lightning:button  class="slds-m-top--small" iconName="utility:level_up" variant="brand"  onclick="{!c.reparent}"
+                                          disabled="{!v.parentSetting.Status__c==null  ||  v.parentSetting.Status__c=='Running' || v.settings.Status__c=='Running' || v.settings.Status__c==null}" label="Make as Parent"/>
+                        <!-- <lightning:button  class="slds-m-top-small" variant="brand" iconName="utility:reassign" disabled="{!v.disabled}" onclick="{!c.makeParent}" label="Make as Parent"/> -->
+                    </lightning:buttonGroup>
+                    
+                </aura:set>
+                
+                <lightning:layout horizontalAlign="spread" multipleRows="true" class="slds-border_top">
+                    <lightning:layoutItem size="6" padding="around-small">
+                        <lightning:input type="text" disabled="true" value="{!v.settings.objectName__c}" label="Object Name"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="6" padding="around-small">
+                        <lightning:input type="text" disabled="true" value="{!v.settings.relationship_field__c}" label="Relationship Field"/>
+                    </lightning:layoutItem>
+                </lightning:layout>	
+            </lightning:card>
+        </aura:set>
+    </aura:if>        
+</aura:component>

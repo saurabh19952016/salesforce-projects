@@ -1,0 +1,18 @@
+<aura:component>
+    <aura:attribute name="tab2" type="string" default="download"/>
+    <lightning:layout>
+            <lightning:layoutItem size="7" padding="around-small"> 
+                <lightning:tabset selectedTabId="{!v.tab2}" variant="vertical">
+                        <lightning:tab iconName="action:download" label="Metadata Retrieve" id="download">
+                                <c:metadataDownloadComponent/>
+                        </lightning:tab>
+                        <lightning:tab iconName="action:upload" label="Metadata Deploy" id="upload">
+                                <c:metadataDeployComponent/>
+                        </lightning:tab>
+                </lightning:tabset>
+            </lightning:layoutItem >
+            <lightning:layoutItem size="5"  padding="around-small">
+                <c:customSettingSaved isMetadata="true" label="metadata"/>
+        </lightning:layoutItem>       
+    </lightning:layout>
+</aura:component>

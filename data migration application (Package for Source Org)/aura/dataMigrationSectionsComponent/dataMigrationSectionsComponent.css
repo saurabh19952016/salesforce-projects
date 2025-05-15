@@ -1,0 +1,13 @@
+.THIS .slds-is-active .slds-vertical-tabs__link {
+    background: darkturquoise;
+    color:white;
+ }
+
+ .THIS .slds-vertical-tabs__content{
+      background: skyblue;
+  
+}
+ .THIS .slds-vertical-tabs__nav-item{
+       background:  #d0e3f5;
+    
+ }

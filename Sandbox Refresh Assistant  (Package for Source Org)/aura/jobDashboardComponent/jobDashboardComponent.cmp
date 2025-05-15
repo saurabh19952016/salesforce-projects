@@ -1,0 +1,25 @@
+<aura:component controller="personalInfoDeletionController">
+<aura:attribute name="jobStatusList" type="List"/>
+<aura:attribute name="selectedObj" type="Object"/>
+<aura:attribute name="columns" type="List"/>
+<aura:attribute name="message" type="String"/>
+<aura:attribute name="type" type="String"/>
+<aura:attribute name="isOpen" type="boolean" default="false"/>
+<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+<aura:if isTrue="{!v.isOpen}">
+    <c:fieldListModal isOpen="{!v.isOpen}" selectedObject="{!v.selectedObj}"/>
+</aura:if>
+<lightning:card title="Job Monitoring Dashboard" iconName="standard:dashboard" class="slds-p-around--medium slds-card_boundary">
+    <div aura:id="message" class="slds-hide slds-p-around--small">  
+        <div  class="{!'slds-box slds-theme_alert-texture slds-theme--' + v.type}"  role="alert">
+            <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium"/>&nbsp;
+            <span class="slds-text-body–regular">
+                <aura:unescapedHtml value="{!v.message}"/>
+            </span> 
+        </div>
+    </div>  
+<lightning:datatable data="{!v.jobStatusList}" keyField="Id" columns="{!v.columns}"
+hideCheckboxColumn="true" onrowaction="{!c.viewRecord}"/>
+</lightning:card>
+</aura:component>

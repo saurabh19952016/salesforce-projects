@@ -1,0 +1,80 @@
+<aura:component controller="MetadataBackupController">
+    <aura:attribute name="showLoadingSpinner" type="boolean" default="false" />
+    <!-- 'fileName' attribute for display the selected file name -->  
+    <aura:attribute name="fileName" type="String" default="No File Selected.." />
+    <aura:attribute name="jobStatuses" type="List" />
+     <aura:attribute name="deployResult" type="Object"/>
+    <aura:attribute name="fileData" type="string"/> 
+    <aura:attribute name="selective" type="Boolean" default="false"/> 
+  <!-- Lightning Input with file type and on file change call the 'handleFilesChange' controller --> 
+  <aura:attribute name="message" type="String"/>
+  <aura:attribute name="disabled" type="boolean"/>
+  <aura:attribute name="type" type="String"/>
+  <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+  <div aura:id="message" class="slds-hide">  
+      <div  class="{!'slds-box slds-theme_alert-texture slds-theme--' + v.type}"  role="alert">
+          <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium"/>&nbsp;
+          <span class="slds-text-body–regular">
+              <aura:unescapedHtml value="{!v.message}"/>
+          </span> 
+      </div>
+  </div> 
+
+  <aura:if isTrue="{!empty(v.jobStatuses)}">
+  <div aura:id="fileSection"  class="slds-card slds-p-around--small">
+    <lightning:input aura:id="fileId" onchange="{!c.handleFilesChange}" type="file" name="file" label="Upload Zip File" multiple="false"/>
+    <div class="slds-text-body_small slds-text-color_error">{!v.fileName} </div>
+  
+  <!--use aura:if for show-hide the loading spinner image--> 
+    <aura:if isTrue="{!v.showLoadingSpinner}">
+       <div class="slds-text-body_small slds-text-color_error">Uploading... 
+          <img src="/auraFW/resources/aura/images/spinner.gif" class="spinner-img" alt="Loading"/>'
+       </div>
+    </aura:if>
+    
+  <br/>
+  <lightning:button disabled="{!v.disabled}" variant="brand" onclick="{!c.doSave}" label="Deploy Metadata"/>
+   </div>
+</aura:if>
+<aura:if isTrue="{!v.deployResult!=null}"> 
+    <lightning:card title="{!'Deployment Status : ' + v.deployResult.status}" iconName="{!v.deployResult.status=='Canceling'?'utility:cancel_file_request':(v.deployResult.status=='Succeeded'?'utility:success':'standard:generic_loading')}">
+    <aura:set attribute="actions">
+        <lightning:button class="{!v.deployResult.status=='InProgress'?'slds-show':'slds-hide'}" onclick="{!c.cancelDeploy}" iconName="utility:cancel_file_request" variant="destructive" label="Cancel Deployment"/>
+    </aura:set>   
+       <div class="{!v.deployResult.status!='Canceling' &amp;&amp; v.deployResult.status!='Canceled'?'slds-show slds-scrollable':'slds-hide'}">
+        <p class="slds-m-around--small"> Total Components to be deployed : {!v.deployResult.numberComponentsTotal} </p> 
+        <p class="slds-m-around--small"> Number of Components deployed : {!v.deployResult.numberComponentsDeployed} </p> 
+        <p class="slds-m-around--small"> Number of  Components failed : {!v.deployResult.numberComponentErrors} </p> 
+        <aura:if isTrue="{!!empty(v.deployResult.componentFailures)}">
+            <p class="slds-m-around--large">ERRORS</p>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-around--medium">
+            <thead>
+                <th class="" scope="col">columnNumber</th>
+                <th class="" scope="col">componentType</th>
+                <th class="" scope="col">fileName</th>
+                <th class="" scope="col">fullName</th>
+                <th class="" scope="col">lineNumber</th>
+                <th class="" scope="col">problem</th>
+                <th class="" scope="col">problemType</th>
+            </thead>
+            <tbody>
+
+                <aura:iteration items="{!v.deployResult.componentFailures}" var="error">
+                    <tr class="slds-line-height_reset">
+                        <td class="" scope="col">{!error.columnNumber}</td>
+                        <td class="" scope="col">{!error.componentType}</td>
+                        <td class="" scope="col">{!error.fileName}</td>
+                        <td class="" scope="col">{!error.fullName}</td>
+                        <td class="" scope="col">{!error.lineNumber}</td>
+                        <td class="" scope="col">{!error.problem}</td>
+                        <td class="" scope="col">{!error.problemType}</td>
+                    </tr> 
+                </aura:iteration>
+            </tbody>
+    </table>
+</aura:if>
+</div>
+
+    </lightning:card>
+</aura:if>
+</aura:component>

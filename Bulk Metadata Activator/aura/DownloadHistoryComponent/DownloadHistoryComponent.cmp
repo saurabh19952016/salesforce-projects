@@ -1,0 +1,21 @@
+<aura:component controller="ContentHistoryController" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:attribute name="items" type="List"/>
+    <aura:handler event="c:RefreshHistoryEvent" action="{!c.doInit}"/>
+    
+    <lightning:card title="Download History" iconName="standard:document">
+        <div class="slds-p-around--medium slds-border_top">
+            <aura:iteration items="{!v.items}" var="content">
+                <lightning:tile  label="{!content.Title}" href="{!'/sfc/servlet.shepherd/version/download/' + content.Id}">
+                    <aura:set attribute="media">
+                        <lightning:icon iconName="doctype:csv" alternativeText="{!content.Title}" size="large"/>
+                    </aura:set>
+                    <ul class="slds-list_vertical">
+                        <li class="slds-item">Downloaded By {!content.CreatedBy.Name} on <lightning:formattedDateTime value="{!content.CreatedDate}" year="numeric" month="short" day="2-digit" hour="numeric"
+                                 weekday="long"/></li>
+                    </ul>
+                </lightning:tile>
+              </aura:iteration>
+        </div>
+    </lightning:card>
+</aura:component>

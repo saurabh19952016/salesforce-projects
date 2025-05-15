@@ -1,0 +1,27 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes">
+        <aura:attribute name="appHeader" type="string"/> 
+        <aura:attribute name="appTitle" type="string"/> 
+        <aura:attribute name="theme" type="string"/> 
+        <aura:attribute name="iconName" type="string"/> 
+        <div class="{!'slds-page-header slds-box ' + v.theme + ' slds-m-around--small'}">
+                <div class="slds-page-header__row">
+                  <div class="slds-page-header__col-title">
+                    <div class="slds-media">
+                      <div class="slds-media__figure">
+                          <lightning:icon iconName="{!v.iconName}"/>
+                      </div>
+                      <div class="slds-media__body">
+                        <div class="slds-page-header__name">
+                          <div class="slds-page-header__name-title">
+                            <h1>
+                              <span class="slds-page-header__title slds-truncate" title="{!v.appHeader}">{!v.appHeader}</span>
+                            </h1>
+                          </div>
+                        </div>
+                        <p class="slds-page-header__name-meta">{!v.appTitle}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>        
+</aura:component>

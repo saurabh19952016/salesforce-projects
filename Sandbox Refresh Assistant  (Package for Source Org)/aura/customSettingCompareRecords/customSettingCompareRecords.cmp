@@ -1,0 +1,54 @@
+<aura:component controller="ConflictResolutionController">
+    <aura:attribute name="selectedObject" type="Object"/>
+    <aura:attribute name="recordWrapList" type="List"/>
+    <aura:attribute name="fieldList" type="List"/>
+    <aura:attribute name="pageNumber" type="integer" default="1"/>
+    <aura:attribute name="TotalPages" type="integer"/>
+    <aura:attribute name="start" type="integer" default="0"/>
+    <aura:attribute name="load" type="boolean" default="false"/>
+    <aura:attribute name="end" type="integer" default="19"/>
+    <aura:handler name="init" value="{!this}" action="{!c.getConflictRecords}"/>
+    <aura:registerEvent name="goToList" type="c:goToSettingListEvt"/>
+    <aura:handler name="change" value="{!v.load}" action="{!c.toggleSpinner}"/>
+    <lightning:card title="{!v.selectedObject.Name +' Conflicts'}" class="slds-card_boundary slds-is-relative"> 
+    <aura:set attribute="actions">
+        <lightning:button label="Save" variant="brand" onclick="{!c.handleSave}"/>
+        <lightning:button label="Back" onclick="{!c.handleBack}"/>
+        <lightning:buttonGroup>
+            <lightning:buttonIcon disabled="{!v.pageNumber == 1}" iconName="utility:back" onclick="{!c.handlePrevious}"/>
+            <lightning:buttonIcon disabled="{!v.pageNumber == v.TotalPages}" iconName="utility:forward" onclick="{!c.handleNext}"/>
+        </lightning:buttonGroup>
+    </aura:set>
+    <aura:set attribute="body">
+        <div class="slds-scrollable">
+         <lightning:spinner aura:id="spinner" />   
+         <p class="slds-p-around--small">Page {!v.pageNumber} of {!v.TotalPages}</p>
+         <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+            <thead>
+                <tr class="slds-line-height_reset">
+                    <aura:iteration items="{!v.fieldList}" var="field">
+                        <th class="" scope="col">
+                            <div class="slds-truncate" title="{!field.fieldName}">{!field.fieldName} (current org)</div>
+                        </th>
+                        <th class="" scope="col">
+                            <div class="slds-truncate" title="{!field.fieldName}">{!field.fieldName} (backup)</div>
+                        </th>
+                    </aura:iteration>
+                </tr>
+            </thead>
+            <tbody>
+                <aura:iteration items="{!v.recordWrapList}" var="record" loaded="{!v.load}" start="{!v.start}" end="{!v.end}">
+                    <tr class="slds-line-height_reset">
+                        <aura:iteration items="{!v.fieldList}" var="field">
+                            <c:tableCellComponent record="{!record.currentOrgRecord}" isCurrentOrg="true" field="{!field}"/>
+                            <c:tableCellComponent record="{!record.backupRecord}" isCurrentOrg="false" field="{!field}"/>
+                        </aura:iteration>
+                    </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+    </div>
+</aura:set>
+
+    </lightning:card>
+</aura:component>

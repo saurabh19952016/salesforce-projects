@@ -1,0 +1,9 @@
+.THIS {
+}
+
+.THIS .card{
+    background-color:aliceblue !important;
+}
+.THIS .slds-truncate {
+    white-space: normal;
+}

@@ -1,0 +1,26 @@
+<aura:component>
+<aura:attribute name="fieldListObject" type="Object"/>
+<aura:attribute name="fields" type="List"/>
+<aura:attribute name="searchValue" type="String"/>
+<aura:attribute name="searchList" type="List"/>
+<aura:attribute name="isOpen" type="Boolean"/>
+<aura:attribute name="object" type="String"/>
+<aura:registerEvent name="selectFieldListEvent" type="c.selectFieldListEvent"/>
+<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+<aura:handler name="change" value="{!v.searchValue}" action="{!c.search}"/>
+<lightning:card class="slds-card_boundary">  
+<aura:set attribute="title">
+    <lightning:input type="search" placeholder="Search for fields in preferences.." value="{!v.searchValue}" class="slds-size_medium"/>
+</aura:set>    
+<aura:set attribute="actions">
+        <lightning:button label="Reuse field selection" iconName="utility:check" variant="brand" onclick="{!c.handleSelection}"/>
+    </aura:set>
+<lightning:layout multipleRows="true">
+<aura:iteration items="{!v.searchList}" var="field" >
+    <lightning:layoutItem class="slds-card_boundary slds-m-around--medium" padding="around-small" size="12" largeDeviceSize="3" mediumDeviceSize="4" smallDeviceSize="12">
+        {!field}
+    </lightning:layoutItem>
+    </aura:iteration>
+    </lightning:layout>
+    </lightning:card>
+</aura:component>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fields>
+        <fullName>fieldList__c</fullName>
+        <externalId>false</externalId>
+        <fieldManageability>DeveloperControlled</fieldManageability>
+        <label>fieldList</label>
+        <length>131072</length>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>refresh_settings__c</fullName>
+        <externalId>false</externalId>
+        <fieldManageability>DeveloperControlled</fieldManageability>
+        <label>refresh settings</label>
+        <referenceTo>refresh_setting_met__mdt</referenceTo>
+        <relationshipLabel>fieldLists</relationshipLabel>
+        <relationshipName>fieldLists</relationshipName>
+        <required>false</required>
+        <type>MetadataRelationship</type>
+        <unique>false</unique>
+    </fields>
+    <label>fieldList</label>
+    <pluralLabel>fieldLists</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>

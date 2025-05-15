@@ -1,0 +1,18 @@
+<aura:component >
+    <aura:attribute name="field" type="String"/>
+    <aura:attribute name="value" type="string"/>
+    <aura:attribute name="fieldList" type="List" default="[]"/>
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+     <lightning:layout  horizontalAlign="spread" >
+                <lightning:layoutItem size="6" padding="around-small">
+                      <lightning:select label="Select field" value="{!v.field}">
+                        <aura:iteration items="{!v.fieldList}" var="fieldval">
+                            <option text="{!fieldval}" value="{!fieldval}" selected="{!fieldval==v.field}"></option>
+                        </aura:iteration>
+                    </lightning:select>
+                </lightning:layoutItem >
+                <lightning:layoutItem size="6" padding="around-small">
+                    <lightning:input type="text" value="{!v.value}" label="Value"/>
+                </lightning:layoutItem>               
+            </lightning:layout>
+</aura:component>

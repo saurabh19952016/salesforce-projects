@@ -1,0 +1,13 @@
+<aura:component controller="AttachToCaseController">
+    <!--<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>  -->
+    <aura:handler event="c:attachReparentEvent" action="{!c.attachReparent}"/>
+   <!-- <aura:handler event="c:emailToAttachmentEvent" action="{!c.emailToAttachment}"/>-->
+    
+    <aura:attribute name="dateLimit" type="dateTime"/>
+    <aura:attribute name="att" type="Attachment" default="{'sobjectType':'Attachment'}"/>
+    <aura:attribute name="Status" type="String"/>
+    <aura:attribute name="Method" type="String"/>
+    <aura:attribute name="email" type="Boolean"/>
+    <aura:attribute name="emIdList" type="List"/> 
+   <!-- <b>Status :</b> {!v.Status} -->
+</aura:component>

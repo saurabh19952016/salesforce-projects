@@ -1,0 +1,28 @@
+<aura:component controller="dataMigrationFormController">
+    <aura:attribute name="message" type="string"/>
+    <aura:attribute name="type" type="string"/>
+    <aura:attribute name="IntList" type="List"/>
+    <aura:handler event="c:authSuccessEvent" action="{!c.init}"/>
+    <aura:handler  event="c:refreshParent" action="{!c.switchTab}"/>
+    <div class="slds-border_top slds-border_bottom slds-border_left slds-border_right">
+          <lightning:tabset selectedTabId="1" aura:id="tabset" variant="vertical" onselect="{!c.onSelectTab}">
+              
+            <aura:iteration items="{!v.IntList}" var="int">
+                <lightning:tab label="{!int.objectName__c}" id="{!int.Hierarchy_Level__c}">
+                  <c:DataMigrationForm aura:id="dataMigrationForm" HierarchyLevel="{!int.Hierarchy_Level__c}"  type="{!v.type}" message="{!v.message}"/>
+                </lightning:tab>
+            </aura:iteration>
+
+            <lightning:tab label="Commit Records" id="commit">
+                <c:dataInsertComponent aura:id="commit"/>
+            </lightning:tab>            
+         <!--   <lightning:tab label="Data Migration (Child)" id="Child">
+                <c:DataMigrationForm HierarchyLevel="1"/>
+            </lightning:tab>
+            <lightning:tab label="Data Migration (Super Parent)" id="subParent">
+                <c:DataMigrationForm  HierarchyLevel="2" type="{!v.type}" message="{!v.message}"/>
+            </lightning:tab>
+ --> 
+        </lightning:tabset>  
+    </div>
+</aura:component>

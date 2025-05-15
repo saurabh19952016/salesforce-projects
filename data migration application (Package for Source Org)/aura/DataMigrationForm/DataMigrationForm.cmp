@@ -1,0 +1,87 @@
+<aura:component controller="dataMigrationFormController">
+    <aura:attribute name="settingsList" type="List" default="[{'sobjectType':'Migration_Objects__c'}]"/>
+    <aura:attribute name="parentRecord" type="Migration_Objects__c"/>
+    <aura:attribute name="childlist" type="List" />
+    <aura:attribute name="HierarchyLevel" type="Integer" />   
+    <aura:attribute name="message" type="string"/>   
+    <aura:attribute name="type" type="string"/>   
+    <aura:attribute name="currentPage" type="Integer" default="1" />   
+    <aura:attribute name="offset" type="Integer" default="0" />   
+    <aura:attribute name="totalPages" type="Integer" default="1" />   
+    <aura:attribute name="searchtext" type="String" />   
+    <aura:attribute name="objectName" type="string"/> 
+    <aura:method name="refreshView" action="{!c.init}" access="public"/>
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    <aura:handler name="clearValueEvent" event="c:clearValueEvent" action="{!c.delete}"/>
+    <aura:registerEvent name="refreshParent" type="c:refreshParent"/>
+    <aura:if isTrue="{!v.message!='' &amp;&amp; v.message!=null}">
+        <div  class="{!'slds-notify slds-notify_alert slds-theme_alert-texture slds-text-align_left slds-theme_'+v.type}"  role="alert">
+            <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium" alternativeText="{!v.type}"/>&nbsp;
+            <span class="slds-text-body–regular">
+                <aura:unescapedHtml value="{!v.message}"/>
+            </span> 
+            <div class="slds-notify__close">
+                <lightning:icon iconName="utility:close"  variant="inverse" onclick="{!c.close}"/>
+            </div>
+        </div>
+    </aura:if>
+    <div aura:id="h2">
+        
+        <lightning:layout horizontalAlign="spread" >
+            
+            <lightning:layoutItem size="12"  padding="around-small">
+                <lightning:card title="Data Migration Setup" iconName='utility:setup'  class="slds-is-relative">
+                    <lightning:spinner aura:id="spinner" variant="brand"/>
+                    
+                    <div aura:id="archival" class="divLayout slds-theme_shade slds-theme_alert-texture  slds-p-around--small">
+                        <div >
+                            <aura:iteration items="{!v.settingsList}" var="setting" indexVar="index">
+                                <aura:if isTrue="{! index == 0}">
+                                    <c:dataMigrationRowComponent type="{!v.type}" message="{!v.message}" settings="{!setting}"/>
+                                </aura:if>
+                            </aura:iteration> 
+                        </div>
+                        <aura:if isTrue="{!v.childlist.length>1}">
+                            <h1 class="slds-m-left--medium slds-text-title_bold">Parent objects found :</h1>
+                            <lightning:buttonGroup class="slds-m-around--small">
+                                <lightning:button onclick="{!c.Previous}" label="Previous" disabled="{!v.currentPage == 1}" iconName="utility:back"/>
+                                <lightning:button onclick="{!c.Next}" label="Next" disabled="{!v.currentPage  == v.totalPages}" iconName="utility:forward"/>
+                            </lightning:buttonGroup>
+                            <span><b>Page {!v.currentPage} of {!v.totalPages}</b></span>
+                            
+                            <lightning:layout multipleRows="true"> 
+                                <aura:iteration items="{!v.childlist}" var="setting" indexVar="index">
+                                    <aura:if isTrue="{!setting.Object_type__c=='Parent'}">
+                                        <lightning:layoutItem size="6" padding="around-small">
+                                            <c:dataMigrationRowComponent type="{!v.type}" message="{!v.message}" settings="{!setting}" parentSetting="{!v.parentRecord}"/>
+                                        </lightning:layoutItem>
+                                    </aura:if>
+                                    
+                                    
+                                </aura:iteration>
+                            </lightning:layout>
+                        </aura:if>
+                    </div>
+                    <aura:set attribute="actions">
+                        <lightning:buttonGroup>
+                            <lightning:button label="Refresh" iconName="utility:refresh" onclick="{!c.init}"/>
+                            <lightning:button class="{!v.settingsList.length>1?'slds-hide':'slds-show'}" label="Save settings" disabled="{!v.disabled}" iconName="utility:save" onclick="{!c.save}" variant ="brand"/>
+                        </lightning:buttonGroup>
+                        <!-- <lightning:button class="slds-m-left-small" iconName="utility:add" onclick="{!c.addRows}" label="Add Row"/> -->
+                    </aura:set>
+                </lightning:card>
+            </lightning:layoutItem>      
+        </lightning:layout>
+    </div>
+    
+    <!--  <lightning:card title="Parent Object insert order">
+    <lightning:layout multipleRows="true">
+   <aura:iteration items="{!v.objectDetails.parentObjects}" var="object">
+       
+   <c:parentOrderComponent object="{!object}"/> 
+    
+   </aura:iteration>
+        </lightning:layout>
+        </lightning:card>
+    <lightning:button label="submit" variant="brand" onclick="{!c.insertRecords}"/> -->
+</aura:component>

@@ -1,0 +1,62 @@
+<aura:component controller="MetadataBackupController">
+    <aura:attribute name="options" type="List"/>
+    <aura:attribute name="jobStatuses" type="List"/>
+    <aura:attribute name="selectValues" type="List" default="[]"/>
+    <aura:attribute name="message" type="String"/>
+    <aura:attribute name="type" type="String"/>
+    <aura:handler event="c:fileSizeEvent" action="{!c.doInit}"/>
+   <!-- <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>-->
+    <lightning:card  title="Pre Refresh Activity" iconName="custom:custom19">
+        <div aura:id="message" class="slds-hide">  
+            <div  class="{!'slds-box slds-theme_alert-texture slds-theme--' + v.type}"  role="alert">
+                <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium"/>&nbsp;
+                <span class="slds-text-body–regular">
+                    <aura:unescapedHtml value="{!v.message}"/>
+                </span> 
+            </div>
+        </div> 
+             <lightning:spinner aura:id="spinner"/> 
+        <aura:if isTrue="{!empty(v.jobStatuses)}">
+            <lightning:layout class="slds-m-top--small"  aura:id="layout" multipleRows="true">
+            <lightning:layoutItem size="12" padding="around-small">
+
+                    <lightning:dualListbox aura:id="listbox"
+                           label= "Metadata Types"
+                           sourceLabel="Available"
+                           selectedLabel="Selected"
+                           fieldLevelHelp="Select your preferred Metadata Types"
+                           options="{!v.options}"
+                           value="{!v.selectValues}"/>
+           </lightning:layoutItem>
+           <lightning:layoutItem size="12" padding="around-small">
+
+            <lightning:input type="toggle" aura:id="checkbox" label="Select All Metadata Types" onchange="{!c.onInputCheck}"/>
+           </lightning:layoutItem>
+           <lightning:layoutItem size="12" padding="around-small">
+
+            <lightning:button class="{!empty(v.selectValues)?'slds-hide':'slds-show'}" aura:id="submitbutton" variant="brand" label="Submit" onclick="{!c.submitAction}"/>
+    </lightning:layoutItem>
+    </lightning:layout>
+ 
+<aura:set attribute="else">
+
+    <div aura:id="status"  style="height:400px">
+    
+        <p class="slds-m-around--small">A retreive job is running in the background. Please find the status below.</p>
+       <div >
+        <aura:iteration items="{!v.jobStatuses}" var="status">
+            <ul>
+                <li class="slds-p-around--medium">{!status.jobId.Name} : {!status.status}
+                    <img src="/auraFW/resources/aura/images/spinner.gif" class="spinner-img" alt="Loading"/>
+                </li> 
+            </ul>
+       </aura:iteration>
+       </div>
+    </div>
+    </aura:set>
+</aura:if>
+
+</lightning:card>
+
+
+</aura:component>

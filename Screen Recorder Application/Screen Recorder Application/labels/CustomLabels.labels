@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>apex_log_deletion_notification</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>apex log deletion notification</shortDescription>
+        <value>Logs size has exceeded the org limit. We have submitted a job to delete the same. Please close the chat window and check after sometime.</value>
+    </labels>
+    <labels>
+        <fullName>trace_flag_deletion_notification</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>trace flag deletion notification</shortDescription>
+        <value>Trace flags already exist for your user account. We have submitted a job to delete the same. Please close the chat window and check after sometime.</value>
+    </labels>
+</CustomLabels>

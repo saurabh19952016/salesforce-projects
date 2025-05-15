@@ -1,0 +1,16 @@
+<aura:component>
+    <aura:attribute name="message" type="string"/>
+    <aura:attribute name="type" type="string"/>
+    
+    <aura:handler  event="c:refreshParent" action="{!c.switchTab}"/>
+    <div class="slds-border_top slds-border_bottom slds-border_left slds-border_right">
+	 <lightning:tabset selectedTabId="Parent" aura:id="tabset" variant="vertical">
+            <lightning:tab label="Data Archival (Parent)" id="Parent">
+                <c:dataArchivalComponent HierarchyLevel="1"/>
+            </lightning:tab>
+            <lightning:tab label="Data Archival (Sub Parent)" id="subParent">
+                <c:dataArchivalComponent  HierarchyLevel="2" type="{!v.type}" message="{!v.message}"/>
+            </lightning:tab>
+        </lightning:tabset>   
+        </div>
+</aura:component>

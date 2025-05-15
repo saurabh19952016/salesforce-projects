@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>deleteBigObjectsBatch</members>
+        <members>destinationDataMigration</members>
+        <members>destinationRecordInsertBatch</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Data_Migration_Index__c</members>
+        <members>Data_migration_Record__b</members>
+        <members>Data_migration_record_Id__b</members>
+        <members>migration_record_Id_Map__c</members>
+        <name>CustomObject</name>
+    </types>
+    <version>47.0</version>
+</Package>

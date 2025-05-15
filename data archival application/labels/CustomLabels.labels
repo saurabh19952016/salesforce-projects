@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>orgWideAddress</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>orgWideAddress</shortDescription>
+        <value>0D2300000008P9e</value>
+    </labels>
+</CustomLabels>

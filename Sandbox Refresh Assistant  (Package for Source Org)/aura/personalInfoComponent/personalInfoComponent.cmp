@@ -1,0 +1,52 @@
+<aura:component controller="personalInfoDeletionController">
+<aura:attribute name="objectName" type="String"/>
+<aura:attribute name="selected" type="List"/>
+<aura:attribute name="currentStep" type="String" default="1"/>
+<aura:attribute name="jobRunning" type="Boolean" default="false"/>
+<aura:attribute name="message" type="String"/>
+<aura:attribute name="type" type="String"/>
+<aura:handler name="change" value="{!v.objectName}" action="{!c.handleChange}"/>
+<aura:handler event="c:selectFieldListEvent" action="{!c.selectFields}"/>
+
+<lightning:card iconName="utility:remove_link">
+<div aura:id="message" class="slds-hide">  
+    <div  class="{!'slds-box slds-theme_alert-texture slds-theme--' + v.type}"  role="alert">
+        <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium"/>&nbsp;
+        <span class="slds-text-body–regular">
+            <aura:unescapedHtml value="{!v.message}"/>
+        </span> 
+    </div>
+</div>   
+<aura:set attribute="title">
+    <lightning:progressIndicator currentStep="{!v.currentStep}" type="path" variant="base">
+        <lightning:progressStep label="Select Object" value="1">
+        </lightning:progressStep>
+        <lightning:progressStep label="Select Fields" value="2"/>
+        </lightning:progressIndicator>  
+</aura:set>
+
+<aura:if isTrue="{!v.currentStep=='1'}">
+<div class="slds-p-around--medium slds-theme_shade slds-card slds-card_boundary slds-is-relative">
+<lightning:formattedText class="slds-p-bottom--small slds-text-title_caps" value="Select object for which personal information needs to be removed"/>
+<c:searchComponent selected="{!v.objectName}" IconName="standard:sobject" label="Object Name"/>
+<lightning:spinner aura:id="spinner" class="slds-hide"/> 
+</div>    
+</aura:if>
+<aura:if isTrue="{!v.currentStep=='2'}">
+<c:fieldSelectionComponent objectName="{!v.objectName}" selectedValues="{!v.selected}"/>
+</aura:if>
+<aura:set attribute="footer">
+
+<lightning:buttonGroup >
+<lightning:button class="{!v.currentStep=='1' || !v.jobRunning?'slds-hide':'slds-show'}" label="Previous" variant="brand" onclick="{!c.handlePrevious}"/>
+
+<lightning:button class="{!v.currentStep=='2' || !v.jobRunning?'slds-hide':'slds-show'}"  label="Next" variant="brand" onclick="{!c.handleNext}"/>
+</lightning:buttonGroup>
+
+</aura:set>
+</lightning:card>
+<div class="slds-p-around--small">
+    <c:jobDashboardComponent />
+</div>
+
+</aura:component>

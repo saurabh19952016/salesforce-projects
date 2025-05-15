@@ -1,0 +1,142 @@
+<aura:component controller="DataMigrationController">
+    <aura:attribute name="authCredentials" type="Object"/>
+    <aura:attribute name="objectName" type="string"/>
+    <aura:attribute name="objList" type="object"/>
+    <aura:attribute name="isPicklist" type="Boolean" default="false"/>
+    <aura:attribute name="spinner" type="Boolean" default="false"/>
+    <aura:attribute name="considerValidation" type="Boolean" default="false"/>
+    <aura:attribute name="considerAlerts" type="Boolean" default="false"/>    
+    <aura:attribute name="getChild" type="Boolean" default="false"/>
+    <aura:attribute name="type" type="string"/>
+    <aura:attribute name="SFDCtoSFDC" type="Boolean" default="false"/>
+    <aura:attribute name="displayBooleans" type="object"/>
+    <aura:attribute name="value" type="String"/>
+   <aura:attribute name="orgOptions" type="List" default="[
+     {'label': 'Production', 'value': 'https://login.salesforce.com'},
+     {'label': 'Sandbox', 'value': 'https://test.salesforce.com'}
+    ]"/>
+    <aura:attribute name="options" type="List" default="[
+                                                        {'label': 'Parent Objects', 'value': 'parent'},
+                                                        {'label': 'Child Objects', 'value': 'child'},
+                                                        {'label': 'Parent Object Picklist', 'value': 'parentPicklist'},
+                                                        {'label': 'Child Object Picklist', 'value': 'childPicklist'}
+                                                        ]"/>    
+    <aura:attribute name="message" type="string"/>
+    <aura:attribute name="help" type="string" default="Select Object to generate document."/>
+    <aura:registerEvent name="PrintEvent" type="c:PrintEvent"/>
+    <aura:handler value="{!this}" name="init" action="{!c.init}"/>
+    <lightning:card title="Data Migration" class="slds-m-around--medium slds-is-relative" iconName="standard:datadotcom">
+       <lightning:spinner aura:id="spinner" variant="brand"/>
+     <div aura:id="message" class="slds-hide">  
+            <div  class="{!'slds-box slds-theme_alert-texture slds-theme--' + v.type}"  role="alert">
+                <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium"/>&nbsp;
+                <span class="slds-text-body–regular">
+                    <aura:unescapedHtml value="{!v.message}"/>
+                </span> 
+                
+            </div>
+        </div> 
+        <aura:set attribute="actions"> 
+            <div class="floating">
+                <aura:if isTrue="{!and(v.displayBooleans.isBigObjPresent,!v.displayBooleans.isJobRunning) &amp;&amp; v.displayBooleans.isDeleteRunning}">
+                    <lightning:button label="Print" variant="success" iconName="utility:print" onclick="{!c.print}" title="Clicking this button will print the object level, validation level and layout level required fields for selected Objects"/>
+                    <lightning:button label="Reset" variant="brand" iconName="utility:refresh" onclick="{!c.clearBigObject}" title="Click this button to reset all details currently available to get details for a new object"/>
+                </aura:if>
+            </div>
+        </aura:set> 
+        
+        <aura:if isTrue="{! and(!v.displayBooleans.isJobRunning , !v.displayBooleans.isBigObjPresent) &amp;&amp; v.displayBooleans.isDeleteRunning}">
+            <div class="slds-m-around--medium">
+                <lightning:layout multipleRows="true" horizontalAlign="spread" class="slds-m-around--small">
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:formattedText class="slds-p-around--small" value="Are you migrating from one SFDC org to another?"/>
+                        <lightning:input checked="{!v.SFDCtoSFDC}" type="toggle" messageToggleActive="SFDC to SFDC" messageToggleInactive="external database to SFDC"/>
+                    </lightning:layoutItem>
+                     <div class="{!v.SFDCtoSFDC?'slds-show':'slds-hide'}">
+
+                         <lightning:layoutItem  size="12" padding="around-small">
+                        <lightning:formattedText class="slds-p-bottom--small slds-text-title_caps" value="Please provide authorization information"/>
+                    </lightning:layoutItem>
+     				 <lightning:layoutItem   size="12" padding="around-small">
+    					<lightning:combobox name="org" label="Org Type" value="{!v.authCredentials.endpoint}" options="{! v.orgOptions }"/>
+                    </lightning:layoutItem>
+                         <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:input type="text" label="Username" class="slds-size_large" value="{!v.authCredentials.username}"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:input type="password" class="slds-size_large" label="Password" value="{!v.authCredentials.password}"/>
+                    </lightning:layoutItem>
+ 
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:input type="text" label="security token" class="slds-size_large" value="{!v.authCredentials.securityToken}"/>
+                    </lightning:layoutItem>
+
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:input type="text" label="Target Org Id"  class="slds-size_large" value="{!v.authCredentials.targetOrgId}"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:input type="text" label="Client ID"  class="slds-size_x-large" value="{!v.authCredentials.clientId}"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:input type="text" label="Client Secret" class="slds-size_x-large" value="{!v.authCredentials.clientSecret}"/>
+                    </lightning:layoutItem>
+					</div>
+                    <lightning:layoutItem  size="12" padding="around-small">
+                        <lightning:formattedText class="slds-p-bottom--small" value="Please select an Object to get Information on migration. This will also include the parent objects. Optionally you can select child objects as well."/>
+                        <c:searchComponent IconName="standard:sobject" selected="{!v.objectName}" helptext="{!v.help}" label="Object Name"/>
+                    </lightning:layoutItem>                    
+
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:formattedText class="slds-p-around--small" value="Do you want to get Child Object fields?"/>
+                        <lightning:input checked="{!v.getChild}" type="toggle" messageToggleActive="Yes" messageToggleInactive="No"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:formattedText class="slds-p-around--small" value="Are you deactivating validation rules in the target organization?"/>
+                        <lightning:input checked="{!v.considerValidation}" type="toggle"  messageToggleActive="Yes" messageToggleInactive="No"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem   size="12" padding="around-small">
+                        <lightning:button variant="brand" class="slds-m-top--small" iconName="utility:send" onclick="{!c.getInfo}"
+                                          label="Submit"/>
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </div>
+            <aura:set attribute="else">
+                <div class="slds-m-around--medium">
+                    <lightning:layout multipleRows="true" horizontalAlign="spread" class="slds-m-around--small">
+                        <aura:if isTrue="{!and(v.displayBooleans.isBigObjPresent,!v.displayBooleans.isJobRunning) &amp;&amp; v.displayBooleans.isDeleteRunning}">
+                            <lightning:layoutItem  size="12" padding="around-small">   
+                                <lightning:formattedText class="slds-p-bottom--small" value="Please find the report below. To restart the analysis please click reset."/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem  size="12" padding="around-small">   
+                                <lightning:radioGroup name="radioGroup"
+                                                      options="{!v.options}"
+                                                      value="{!v.value}" onchange="{!c.handleChange}"
+                                                      type="button"/>
+                            </lightning:layoutItem>
+                            <aura:set attribute="else">
+                                <aura:if isTrue="{!!v.displayBooleans.isDeleteRunning}">
+                                    <lightning:layoutItem  size="12" padding="around-small">   
+                                        <lightning:formattedText class="slds-p-bottom--small" value="Report reset is in progess. You will be notified once all the settings for the report are cleared."/>
+                                    </lightning:layoutItem>
+                                    <aura:set attribute="else">
+                                        <lightning:layoutItem  size="12" padding="around-small">   
+                                            <lightning:formattedText class="slds-p-bottom--small" value="We are currently retrieving the field information for the selected Object. You will be notified when the report is ready."/>
+                                        </lightning:layoutItem>
+                                    </aura:set>
+                                </aura:if>
+                            </aura:set>
+                        </aura:if>
+                    </lightning:layout>
+                </div>
+            </aura:set>
+            
+        </aura:if>
+        
+    </lightning:card>
+    <lightning:layout>
+        <lightning:layoutItem size="12">
+            			<c:DataMigrationObjectAccordion objList="{!v.objList}" isPicklist="{!v.isPicklist}"/>
+        </lightning:layoutItem>
+    </lightning:layout>      
+    
+</aura:component>

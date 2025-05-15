@@ -1,0 +1,264 @@
+<apex:page controller="sandboxRefreshVFController" id="page" action="{!deleteExisting}">
+    <head>
+        
+        <script>
+        Visualforce.remoting.timeout = 120000; // Set timeout at page level
+        var jobStatuses=[];   
+        var maxStringSize=6000000;
+        var maxFileSize = 5120000;      //After Base64 Encoding, this is the max file size
+        var chunkSize = 950000;         //Maximum Javascript Remoting message size is 1,000,000 characters
+        var attachment;
+        var attachmentName;
+        var fileSize;
+        
+        function submitRestoreJob(){
+            var file = document.getElementById('attachmentFile').files[0];
+            var mode=document.getElementById("page:form:bkpBlock:bkpSection:mode").value;
+            console.log(mode);      
+            if(mode=='setting' && file.name!='custom settings.zip'){
+                alert("Please upload the custom setting file with the name 'custom setting.zip'");
+            }
+            else if(file != undefined) {
+                if(file.size <= maxFileSize) {
+                    attachmentName = file.name;
+                    
+                    var fileReader = new FileReader();
+                    fileReader.onloadend = function(e) {
+                        attachment = window.btoa(this.result);  //Base 64 encode the file before sending it
+                        uploadAttachment(mode);
+                    }
+                    fileReader.onerror = function(e) {
+                        alert("There was an error reading the file.  Please try again.");
+                    }
+                    fileReader.onabort = function(e) {
+                        alert("There was an error reading the file.  Please try again.");
+                    }
+                    
+                    fileReader.readAsBinaryString(file);  //Read the body of the file
+                    
+                } else {
+                    alert("File must be under 4.3 MB in size.  Your file is too large.  Please try again.");
+                }
+            } else {
+                alert("You must choose a file before trying to upload it");
+            }
+        }
+        
+        function uploadAttachment(mode) {
+            var attachmentBody = attachment;
+            console.log("Uploading " + attachmentBody.length);
+            sandboxRefreshVFController.uploadFile(
+                attachmentBody, attachmentName,mode,
+                function(result, event) {
+                    console.log(result);
+                    if(event.type === 'exception') {
+                        console.log("exception");
+                        alert(event.message);
+                    } else if(event.status) {
+                        document.getElementById("page:form:bkpBlock:bkpSection").style.display='none';
+                        document.getElementById("page:form:block").style.display='none';
+                        document.getElementById("restoreStatus").style.display='block';
+                        if(mode=='setting'){
+                            window.open('/apexpages/setup/listAsyncApexJobs.apexp','_blank');
+                        }
+                        else{
+                            window.open('/changemgmt/monitorDeployment.apexp','_blank');
+                        }
+                    } else {
+                        console.log(event.message);
+                    }
+                },
+                {buffer: true, escape: true, timeout: 120000}
+            );
+        }    
+        
+        function submitJobAsync(){
+            var retrieveDiv=document.getElementById('retrieveStatus');
+            retrieveDiv.style.display="block";
+            var dropDown = document.getElementById('page:form:block:metadataSection:metadataSelect'), selectedValues = [], i,promises=[];
+            console.log(dropDown);
+            alert('Job submitted for metadata Retrieve');
+            document.getElementById('metaSection').style.display='none';
+            for (i = 0; i < dropDown.options.length ; i += 1) {
+                if (dropDown.options[i].selected) {
+                    //countryValue.push( dropDown.options[i].value); //If you only need values
+                    selectedValues.push(dropDown.options[i].value);
+                }
+            }
+            console.log(selectedValues);
+            selectedValues.forEach(element => 
+                                   {
+                                       var method= new Promise(function(resolve, reject) {
+                                       Visualforce.remoting.Manager.invokeAction(
+                                       '{!$RemoteAction.sandboxRefreshVFController.submitRetreiveJob}',
+                                       element,
+                                       function(result, event){
+                                       if (event.status) {
+                                       // Get DOM IDs for HTML and Visualforce elements like this
+                                       resolve(result);
+                                   } else if (event.type === 'exception') {
+                reject('exception');
+                
+            } else {
+            }
+        } 
+        );    
+        });
+        promises.push(method);
+        });
+        Promise.all(promises).then(function(value){
+            console.log(value);
+            jobStatuses=value;
+            createStatusElements(retrieveDiv);
+            checkRetreive();
+        });
+        }       
+        
+        function checkRetreive(){
+            var retrieveDiv=document.getElementById('retrieveStatus');
+            var promises=[];
+            jobStatuses.forEach(element => 
+                                {
+                                    if(element.status!='Succeeded' && element.status!='Failed'){
+                                    
+                                    var method= new Promise(function(resolve, reject) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                    '{!$RemoteAction.sandboxRefreshVFController.checkRetrieveStatus}',
+                                    JSON.stringify(element),
+                                    function(result, event){
+                                    if (event.status) {
+                                    // Get DOM IDs for HTML and Visualforce elements like this
+                                    resolve(result);
+                                } else if (event.type === 'exception') {
+                reject('exception');
+                
+            } else {
+            }
+        } 
+        );    
+        });
+        promises.push(method);
+        }
+        });
+        if(promises.length>0){
+            Promise.all(promises).then(function(value){
+                console.log(value);
+                var completed=0;
+                value.forEach(element=>{
+                    if(element.status=='Succeeded' || element.status=='Failed'){
+                    completed+=1;
+                    console.log(completed);
+                }
+                              });
+                if(completed==value.length){
+                    jobStatuses=[];
+                    retrieveDiv.innerHTML='';
+                    document.getElementById('metaSection').style.display='block';            
+                }
+                else{
+                    jobStatuses=value;
+                    createStatusElements(retrieveDiv);
+                    checkRetreive();  
+                }
+            });
+        }   
+        }
+        
+        function createStatusElements(retrieveDiv){
+            jobStatuses.forEach(element=>{
+                var exisitngP=document.getElementById(element.jobId.Name);
+                if(exisitngP==null){
+                var ptag=document.createElement('P');
+                ptag.innerHTML =element.jobId.Name + ' : ' +element.status + ' <img src="/auraFW/resources/aura/images/spinner.gif" class="spinner-img" alt="Loading"/>';  
+                ptag.id=element.jobId.Name;
+                retrieveDiv.appendChild(ptag);
+            }
+                                else{
+                                exisitngP.innerHTML=element.jobId.Name + ' : ' +element.status + ' <img src="/auraFW/resources/aura/images/spinner.gif" class="spinner-img" alt="Loading"/>';  
+                                }
+                                });    
+        }
+        </script>
+    </head>
+    <body onload="onBodyLoad()">
+        <apex:outputPanel rendered="{!IF(enableDeleteJobs,false,true)}">
+            An abort job is already Running.
+        </apex:outputPanel>     
+        <apex:form id="form" rendered="{!IF(enableDeleteJobs,true,false)}">
+            <apex:pageMessages />
+
+        <apex:outputPanel >
+            <apex:commandButton value="Abort all jobs" action="{!submitAbortBatch}"/> 
+        </apex:outputPanel>           
+            
+            <apex:pageBlock id="block">
+                <apex:facet name="header">
+                    <apex:outputpanel >
+                        <apex:outputText style="font-weight:bold;font-size:18px;float:left;padding:5px 5px 5px 5px;" value="Retrieve Section"/>
+                        <apex:outputLink style="Float:right;padding:5px 5px 5px 5px;" value="{!$Site.BaseUrl + '/changemgmt/monitorDeployment.apexp'}" target="_blank"> Check Deployment Status</apex:outputLink>
+                        <apex:outputLink style="Float:right;padding:5px 5px 5px 5px;" value="{!$Site.BaseUrl + '/sfc/#workspaceView?selectedWorkspaceId=' + workSpaceId}" target="_blank"> Go to Backup Library</apex:outputLink>   
+                        
+                    </apex:outputpanel>
+                </apex:facet>
+                <apex:pageBlockSection id="customSettingSection">
+                    <apex:selectRadio value="{!selectedTab}" rendered="{!IF(selectedTab!=null,true,false)}">
+                        <apex:selectOption itemLabel="Custom Settings Backup" itemValue="setting"></apex:selectOption>
+                        <apex:selectOption itemLabel="Metadata Backup" itemValue="metadata"></apex:selectOption>
+                        <apex:actionSupport event="onchange" reRender="block"/>
+                    </apex:selectRadio>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection columns="1" rendered="{!IF(selectedTab=='setting' && !customSettingList.empty,true,false)}">
+                    
+                    <apex:outputLabel value="Select Custom Settings" />
+                    <apex:selectList multiselect="true" size="8" value="{!selectedCSList}">
+                        <apex:selectOptions value="{!customSettingList}"></apex:selectOptions>
+                    </apex:selectList>
+                    <apex:commandButton value="Submit Job" action="{!submitJob}"/> 
+                </apex:pageBlockSection>
+                <div id="metaSection">
+                    <apex:pageBlockSection id="metadataSection" columns="1" rendered="{!IF(selectedTab=='metadata' && !metadataList.empty,true,false)}">
+                        <apex:outputLabel value="Select Metadata" />
+                        <apex:selectList id="metadataSelect" multiselect="true" size="8" value="{!selectedMetadataList}">
+                            <apex:selectOptions value="{!metadataList}"></apex:selectOptions>
+                        </apex:selectList>
+                        <apex:commandButton value="Submit Job" onclick="submitJobAsync()" rerender="none"/> 
+                    </apex:pageBlockSection>
+                </div>
+                
+                <div id="retrieveStatus" style="display:none;">
+                    Please do not refresh the page while we are retrieving metadata.
+                </div>
+            </apex:pageBlock>
+            <apex:pageblock id="bkpBlock" title="Restore Backup Section">
+                <apex:pageBlockSection id="bkpSection" columns="1" >
+                    <input type="file" id="attachmentFile"/>
+                    <apex:selectList id="mode" value="{!selectedTabRestore}" size="1">
+                        <apex:selectOption itemLabel="restore custom settings" itemValue="setting"></apex:selectOption>
+                        <apex:selectOption itemLabel="restore metadata" itemValue="metadata"></apex:selectOption>
+                        <apex:actionSupport event="onchange" reRender="bkpBlock"/>
+                    </apex:selectList>
+                    <apex:commandButton value="Submit" onclick="submitRestoreJob()" rendered="{!IF(!customSettingList.empty && selectedTabRestore='setting',true,false)}" rerender="none"/> 
+                </apex:pageBlockSection>
+            </apex:pageblock>
+            <div id="restoreStatus" style="display:none;">
+                Please do not refresh the page while restore is in progress.
+            </div>
+            <apex:pageblock id="obscureBlock" title="Personal Information Obscure">
+                <apex:pageBlockSection id="obscureSection" columns="1" >
+                     <apex:outputLabel value="Select Object" />
+                   <apex:selectList id="object" value="{!selectedObject}" size="1">
+                            <apex:selectOptions value="{!objectList}"></apex:selectOptions>
+                        <apex:actionSupport event="onchange" reRender="form" action="{!getObjectFields}"/>
+                    </apex:selectList>
+                     <apex:outputLabel value="Select Fields or Users(In case user object is selected)" rendered="{!IF(selectedObject==null || fieldOrUserList.empty,false,true)}"/>
+                   
+                    <apex:selectList id="fields" value="{!FldOrUsrSelected}" size="7" multiselect="true" rendered="{!IF(selectedObject==null || fieldOrUserList.empty,false,true)}">
+                            <apex:selectOptions value="{!fieldOrUserList}"></apex:selectOptions>
+                    </apex:selectList>
+                    <apex:commandButton value="Submit" action="{!submitObscureJob}" rendered="{!IF(!fieldOrUserList.empty,true,false)}" rerender="form"/> 
+                </apex:pageBlockSection>
+            </apex:pageblock>
+         
+        </apex:form>
+    </body>
+</apex:page>

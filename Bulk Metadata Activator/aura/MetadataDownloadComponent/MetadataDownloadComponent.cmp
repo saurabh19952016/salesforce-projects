@@ -1,0 +1,33 @@
+<aura:component controller="MetadataDownloadControllerLight" implements="flexipage:availableForAllPageTypes">
+    <aura:handler name="init" action="{!c.init}" value="{!this}"/>
+    <aura:attribute name="sObjectList" type="String[]"/>
+    <aura:attribute name="objname" type="String"/>
+    <aura:attribute name="objnameLower" type="String"/>
+
+    <aura:attribute name="metadatamap" type="List"/>
+    <aura:attribute name="SizeOfMap" type="Integer"/>
+    <div class="slds-is-relative">
+        <lightning:spinner aura:id="spinner" alternativeText="Loading" size="large" variant="brand"/>
+        <lightning:card class="slds-p-around--small slds-theme--shade card" title="Download Metadata Section" iconName="action:download">
+            <div class="slds-form slds-form--stacked slds-border_top slds-p-top--medium" >
+                <lightning:layout horizontalAlign="center" verticalAlign="end" >
+                    <lightning:layoutItem class="slds-grid_vertical-align-center" padding="horizontal-medium">
+      				  <c:searchComponent IconName="standard:sobject" selected="{!v.objname}" label="Choose Object for downloading metadata"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem class="slds-grid_vertical-align-center" padding="horizontal-medium" >
+                        <lightning:button onclick="{!c.getObjectMetadata}" label="Get Metadata Information" iconName="action:download" class="slds-button_brand"/> 
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </div>
+        </lightning:card>
+        <aura:renderif isTrue="{!v.SizeOfMap > 0}">
+            <lightning:card iconName="{!'standard:' + v.objnameLower}" title="{!'Components for ' + v.objnameLower + ' Object'}"  class="card slds-p-top--small slds-theme_alert-texture">
+                <div class="slds-border_top" >
+                    <aura:iteration items="{!v.metadatamap}" var="rec" indexvar="key"> 
+                        <c:metaTableComponent records="{!rec.value}" rec="{!rec.key}" object="{!v.objname}"/>
+                    </aura:iteration>  
+                </div>
+            </lightning:card>
+        </aura:renderif>
+    </div>
+</aura:component>

@@ -1,0 +1,97 @@
+<aura:component controller="dataArchivalController" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" >
+    <aura:attribute name="settings" type="Data_Archival_Object_Settings__c" default="{'sobjectType':'Data_Archival_Object_Settings__c'}"/>
+    <aura:attribute name="parentSetting" type="Data_Archival_Object_Settings__c"/>
+    <aura:attribute name="showButton" type="Boolean" default="false"/>
+    <aura:attribute name="message" type="string"/>
+    <aura:attribute name="help" type="string" default="Select Object for configuring Archival. Clicking on close button automatically deletes the current settings."/>
+    <aura:attribute name="type" type="string"/>
+    <aura:attribute name="query" type="string"/>
+    <aura:attribute name="fieldList" type="List" default="[]"/>
+    <aura:attribute name="disabled" type="boolean" default="true"/>   
+    <aura:handler name="oSelectedValueEvent" event="c:oSelectedValueEvent" action="{!c.handleFieldEvent}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.handleFieldEvent}"/>
+    <aura:registerEvent name="attachReparentEvent" type="c:attachReparentEvent"/>
+    <aura:registerEvent name="refreshParent" type="c:refreshParent"/>
+    <aura:handler name="clearValueEvent" event="c:clearValueEvent" action="{!c.clearFields}"/>
+    <div class="slds-is-relative" >
+        <lightning:spinner aura:id="spinner" variant="brand"/>
+        <aura:if isTrue="{!v.settings.Object_type__c=='Parent'}">
+            
+            <lightning:card title="{!'Data Archival ' + v.settings.Object_Name__c}" iconName="utility:database" class="card slds-card_boundary slds-m-around--medium">
+                <aura:set attribute="footer">
+                    <lightning:button  class="{!v.settings.Object_Name__c==null || v.settings.Object_Name__c==''?'slds-hide':'slds-m-top--small'}" iconName="utility:rotate" disabled="{!v.disabled || v.settings.Status__c=='Completed' || v.settings.Status__c=='Running'}" onclick="{!c.runBatchClass}"
+                                      label="{!v.settings.Status__c=='Running'?'Batch Running':v.settings.Status__c=='Completed'?'Batch Completed':'Run Batch'}"/>
+                    <lightning:button variant="brand" class="{!v.settings.Object_Name__c!='EmailMessage' ?'slds-hide':'slds-m-top--small'}" iconName="utility:rotate" onclick="{!c.runAttachtoCase}"
+                                      label="Reparent Attachments"/>
+                </aura:set>
+                
+                <lightning:layout horizontalAlign="spread" multipleRows="true" class="slds-border_top">
+                    <lightning:layoutItem size="12" padding="around-small">
+                        <aura:if isTrue="{!v.settings.Hierarchy_Level__c=='1'}">
+                            <c:searchComponent IconName="standard:sobject" selected="{!v.settings.Object_Name__c}" helptext="{!v.help}" label="Object Name"/>
+                            <aura:set attribute="else">
+                                <lightning:input type="text" class="slds-size--medium" disabled="true" value="{!v.settings.Object_Name__c}" label="Object Name"/>
+                            </aura:set>
+                        </aura:if> 
+                    </lightning:layoutItem>
+                    <lightning:layoutItem size="6" padding="around-small" class="{!v.settings.Object_Name__c==null || v.settings.Object_Name__c=='' ?'slds-hide':'slds-show'}">
+                           <div aria-labelledby="Filters">
+                            <fieldset class="slds-box slds-theme--default slds-container--small">
+                                <legend id="Filters" class="slds-text-heading--small 
+                                                                   slds-p-vertical--medium">
+                                   Date Filters
+                                </legend>
+                        <lightning:layout horizontalAlign="spread" multipleRows="true">
+                            <lightning:layoutItem size="12" class="{!v.settings.Object_Name__c==null || v.settings.Object_Name__c==''?'slds-hide':'slds-show'}">
+                                <lightning:input type="datetime" value="{!v.settings.Archival_From_Date__c}" required="true" label="From Date"/>
+                                
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" class="{!v.settings.Object_Name__c==null || v.settings.Object_Name__c==''?'slds-hide':'slds-show'}">
+                                <lightning:input type="datetime" value="{!v.settings.Archival_To_Date__c}" required="true" label="To Date"/>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                               </fieldset>
+                        </div>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem size="6" padding="around-small" class="{!v.settings.Object_Name__c==null || v.settings.Object_Name__c=='' || v.settings.Object_Name__c== 'EmailMessage'?'slds-hide':'slds-show'}">
+                        <div aria-labelledby="Filters">
+                            <fieldset class="slds-box slds-theme--default slds-container--small">
+                                <legend id="Filters" class="slds-text-heading--small 
+                                                                   slds-p-vertical--medium">
+                                  Additional Filters
+                                </legend>
+                                <c:ArchivalFilterComponent fieldList="{!v.fieldList}" field="{!v.settings.FilterField_1__c}" value="{!v.settings.filterValue_1__c}"/>
+                                <c:ArchivalFilterComponent fieldList="{!v.fieldList}" field="{!v.settings.FilterField_2__c}" value="{!v.settings.filterValue_2__c}"/> 
+                            </fieldset>
+                            </div>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                </lightning:card>
+                <aura:set attribute="else">
+                    
+                    <lightning:card title="{!v.settings.Object_Name__c}"  iconName="utility:database" class="card slds-card_boundary slds-m-around--medium">
+                        <aura:set attribute="footer">
+                            <lightning:buttonGroup>
+                                <lightning:button  class="slds-m-top--small" iconName="utility:rotate" disabled="{!v.disabled || v.parentSetting.Status__c=='Running'|| v.parentSetting.Status__c=='Submitted' || v.settings.Status__c=='Running' || v.settings.Status__c=='Completed'}" onclick="{!c.runBatchClass}"
+                                                  label="{!v.settings.Status__c=='Running'?'Batch Running':v.settings.Status__c=='Completed'?'Batch Completed':'Run Batch'}"/>
+                                <lightning:button  class="{!v.settings.Hierarchy_Level__c=='2'?'slds-m-top--small':'slds-hide'}" iconName="utility:level_up" variant="brand" disabled="{!v.disabled || v.parentSetting.Status__c=='Submitted' ||  v.parentSetting.Status__c=='Running' || v.settings.Status__c=='Running'}" onclick="{!c.reparent}"
+                                                  label="Make as Parent"/>
+                                <!-- <lightning:button  class="slds-m-top-small" variant="brand" iconName="utility:reassign" disabled="{!v.disabled}" onclick="{!c.makeParent}" label="Make as Parent"/> -->
+                            </lightning:buttonGroup>
+                            
+                        </aura:set>
+                        
+                        <lightning:layout horizontalAlign="spread" multipleRows="true" class="slds-border_top">
+                            <lightning:layoutItem size="6" padding="around-small">
+                                <lightning:input type="text" disabled="true" value="{!v.settings.Object_Name__c}" label="Object Name"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="6" padding="around-small">
+                                <lightning:input type="text" disabled="true" value="{!v.settings.relationship_field__c}" label="Relationship Field"/>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                    </lightning:card>
+                </aura:set>
+            </aura:if>        
+        </div>
+    </aura:component>

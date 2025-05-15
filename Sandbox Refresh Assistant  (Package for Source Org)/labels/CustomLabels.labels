@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>jobs_to_skip</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>jobs to skip</shortDescription>
+        <value>&apos;sojbectDmlBatch&apos;,&apos;deleteScheduledJobs&apos;,&apos;clearPersonalInfoBatch&apos;,&apos;readZipQueueable&apos;,&apos;createZipQueueable&apos;</value>
+    </labels>
+    <labels>
+        <fullName>org_name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>org name</shortDescription>
+        <value>archive</value>
+    </labels>
+</CustomLabels>

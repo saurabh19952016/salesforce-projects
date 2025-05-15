@@ -1,0 +1,45 @@
+<aura:component controller="MetadataActivationControllerLight" implements="flexipage:availableForAllPageTypes">
+    <aura:attribute name="metadataList" type="List"/>
+    <aura:attribute name="selected" type="String"/>
+    <aura:attribute name="MessageList" type="List"/>
+    <aura:attribute name="messageType" type="String"/>
+    <aura:attribute name="Title" type="String"/>
+
+    <aura:attribute name="showLoadingSpinner" type="boolean" default="false" />
+    <!-- 'fileName' attribute for display the selected file name -->  
+    <aura:attribute name="fileName" type="String" default="No File Selected.." />
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <lightning:card class="slds-p-around--small slds-theme--shade card slds-is-relative" title="Upload Metadata Section" iconName="action:upload">
+        <lightning:spinner aura:id="spinner" alternativeText="Loading" size="large" variant="brand" class="slds-hide"/>
+        <div class="slds-form slds-form--stacked slds-border_top slds-p-top--medium" >
+            <ui:message class="{!empty(v.MessageList)?'slds-hide':'slds-show'}" title="{!v.Title}" severity="{!v.messageType}" closable="true">
+                <aura:iteration items="{!v.MessageList}" var="message">
+                <p>{!message}</p>
+                </aura:iteration>
+            </ui:message>
+            <lightning:layout verticalAlign="end" multipleRows="true" >
+                <lightning:layoutItem class="slds-grid_vertical-align-center" padding="horizontal-medium">
+                    <lightning:select value="{!v.selected}" class="slds-size_medium" name="select object" label="Choose metadata to activate" required="true">
+                        <aura:iteration items="{!v.metadataList}" var="meta">
+                            <option text="{!meta}" value="{!meta}"></option>
+                        </aura:iteration>
+                    </lightning:select>
+                    <lightning:input aura:id="fileId" onchange="{!c.handleFilesChange}" type="file" name="file" label="Upload File" multiple="false"/>
+                    <div class="slds-text-body_small slds-text-color_error">{!v.fileName} </div>
+                    
+                    <!--use aura:if for show-hide the loading spinner image--> 
+                    <aura:if isTrue="{!v.showLoadingSpinner}">
+                        <div class="slds-text-body_small slds-text-color_error">Uploading... 
+                            <img src="/auraFW/resources/aura/images/spinner.gif" class="spinner-img" alt="Loading"/>'
+                        </div>
+                    </aura:if>
+                </lightning:layoutItem>
+                <lightning:layoutItem class="slds-grid_vertical-align-center" padding="horizontal-medium" >
+                    <lightning:button label="{!'Update ' + v.selected}" iconName="action:upload" class="slds-button_brand" onclick="{!c.uploadFile}"/> 
+                </lightning:layoutItem>
+            </lightning:layout>
+        </div>
+    </lightning:card>
+    
+</aura:component>

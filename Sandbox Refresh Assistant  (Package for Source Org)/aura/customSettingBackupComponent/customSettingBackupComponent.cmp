@@ -1,0 +1,25 @@
+<aura:component controller="customSettingBkpController">
+<aura:attribute name="isJobRunning" type="Boolean" default="false"/>
+<aura:attribute name="tab2" type="string" default="download"/>
+<aura:handler name="init" value="{!this}" action="{!c.doInit}"/> 
+<lightning:layout multipleRows="{!v.isJobRunning}">
+    <lightning:layoutItem size="{!v.isJobRunning==true?'12':'7'}" class="{!!v.isJobRunning?'slds-hide':'slds-show slds-p-around--medium'}" padding="around-small">
+        <lightning:formattedText
+        value="A job is already running to create/ download custom setting records. Please wait until it is done."/>
+</lightning:layoutItem>
+<lightning:layoutItem size="7" padding="around-small" class="{!v.isJobRunning?'slds-hide':'slds-show'}" >
+    <lightning:tabset selectedTabId="{!v.tab2}" variant="vertical">
+        <lightning:tab iconName="action:download" label="Custom Settings download" id="download">
+                <c:customSettingDownloadComponent/>
+        </lightning:tab>
+        <lightning:tab iconName="action:upload" label="Custom Settings upload" id="upload">
+            <c:customSettingUploadComponent/>
+        
+        </lightning:tab>
+        </lightning:tabset>
+</lightning:layoutItem>
+<lightning:layoutItem size="{!v.isJobRunning==true?'12':'5'}"  padding="around-small">
+    <c:customSettingSaved isMetadata="false" label="custom settings"/>
+</lightning:layoutItem>
+</lightning:layout>
+</aura:component>

@@ -1,0 +1,17 @@
+<aura:component controller="ContentHistoryController">
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    <aura:attribute name="records" description="metadata map" type="List" required="true"/>
+    <aura:attribute name="rec" description="key value" type="String" required="true"/>
+    <aura:attribute name="rows" description="key value" type="Object"/>
+    <aura:attribute name="object" description="object name" type="string" required="true"/>
+    <aura:registerEvent name="RefreshHistory" type="c:RefreshHistoryEvent"/>
+    <aura:attribute name="columns" type="List"/>  
+    <div class="slds-box slds-theme_default slds-m-around--medium table">
+        <lightning:card iconName="utility:automate" title="{!v.rec}" class="table">
+            <aura:set attribute="actions">
+                <lightning:button label="Download CSV" onclick="{!c.downloadCsv}"/>
+            </aura:set>
+            <lightning:datatable hideCheckboxColumn="true" columns="{! v.columns }" data="{! v.rows }" keyField="id"/>
+        </lightning:card>
+    </div>
+</aura:component>

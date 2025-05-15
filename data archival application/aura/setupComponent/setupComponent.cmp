@@ -1,0 +1,11 @@
+<aura:component extensible="true" controller="ArchivalHelperController">
+    <aura:attribute name="setup" type="Boolean" access="global"/>
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    <aura:if isTrue="{!v.setup==true}">
+        <lightning:card class="slds-m-around--small" title="Please do the initial setup by clicking this button">
+    		<aura:set attribute="actions">
+            	<lightning:button  label="Initial Setup" onclick="{!c.setupArchival}"/>
+            </aura:set>
+        </lightning:card>
+    </aura:if>
+</aura:component>

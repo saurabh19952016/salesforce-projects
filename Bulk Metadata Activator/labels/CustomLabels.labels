@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>csv_error</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>csv error</shortDescription>
+        <value>An error has occured while importing data Please make sure input csv file is correct.</value>
+    </labels>
+    <labels>
+        <fullName>invalid_column</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>invalid column</shortDescription>
+        <value>Invalid number of columns or incorrect column headers. column names should be [objectname,componentname,status]</value>
+    </labels>
+    <labels>
+        <fullName>invalid_component_name</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>invalid component name</shortDescription>
+        <value>Invalid component name at row number</value>
+    </labels>
+    <labels>
+        <fullName>invalid_flow_name1</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>invalid flow name</shortDescription>
+        <value>Invalid flow name or status at row</value>
+    </labels>
+    <labels>
+        <fullName>invalid_flow_name2</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>invalid flow name</shortDescription>
+        <value>. Please enter flow in the form of {flowName}-{version}.</value>
+    </labels>
+    <labels>
+        <fullName>invalid_object</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>invalid object</shortDescription>
+        <value>Invalid object api name at row</value>
+    </labels>
+    <labels>
+        <fullName>invalid_row1</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>invalid row</shortDescription>
+        <value>Activation column contains invalid value at row</value>
+    </labels>
+    <labels>
+        <fullName>invalid_row2</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>invalid row</shortDescription>
+        <value>. True or False are allowed</value>
+    </labels>
+    <labels>
+        <fullName>meta_act_successful</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>meta act successful</shortDescription>
+        <value>Metadata Activation/ De-activation successful.</value>
+    </labels>
+    <labels>
+        <fullName>metadata_act_error1</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>metadata act error</shortDescription>
+        <value>There was an error while updating the</value>
+    </labels>
+    <labels>
+        <fullName>metadata_act_error2</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>metadata act error</shortDescription>
+        <value>. Please check the errors and  reupload.\n</value>
+    </labels>
+    <labels>
+        <fullName>pattern</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>pattern</shortDescription>
+        <value>^[a-zA-Z0-9_]+(-[0-9]+)$</value>
+    </labels>
+    <labels>
+        <fullName>valid_flow_status</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>valid flow status</shortDescription>
+        <value>Active,Draft,InvalidDraft,Obsolete</value>
+    </labels>
+</CustomLabels>

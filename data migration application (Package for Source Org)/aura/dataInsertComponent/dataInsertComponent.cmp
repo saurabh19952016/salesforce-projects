@@ -1,0 +1,48 @@
+<aura:component controller="dataMigrationFormController">
+    <aura:attribute name="objectList" type="List"/>
+    <aura:attribute name="message" type="String"/>
+    <aura:attribute name="type" type="String"/>   
+     <aura:method name="refreshView" action="{!c.getObjects}" access="public"/>
+   <div class="slds-is-relative">
+        <lightning:spinner aura:id="spinner" variant="brand"/>
+        <div aura:id="message" class="slds-hide">  
+            <div  class="{!'slds-box slds-theme_alert-texture slds-theme--' + v.type}"  role="alert">
+                <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium"/>&nbsp;
+                <span class="slds-text-body–regular">
+                    <aura:unescapedHtml value="{!v.message}"/>
+                </span> 
+            </div>
+        </div> 
+        <lightning:card title="Commit Records to target org" aura:id="card">
+            <aura:set attribute="actions">
+                <lightning:button label="Commit Records" variant="brand" onclick="{!c.commit}"/>
+            </aura:set>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="" scope="col">
+                            <div class="slds-truncate" title="Object Name">Object Name</div>
+                        </th>
+                        <th class="" scope="col">
+                            <div class="slds-truncate" title="Order">Order</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <aura:iteration items="{!v.objectList}" var="object">
+                        <tr>
+                            <td>
+                                <ui:outputText value="{!object.objectName}"/>
+                            </td>
+                            <td>
+                                <lightning:input type="number" min="1" value="{!object.order}"/>
+                            </td>
+                        </tr>             
+                    </aura:iteration>
+                    
+                </tbody>
+            </table>
+        </lightning:card>
+    </div>
+    
+</aura:component>

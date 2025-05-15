@@ -1,0 +1,34 @@
+<aura:component controller="emailUnarchivalLight">
+    <aura:attribute name="emList" type="List"/>
+    <aura:attribute name="filteredEmails" type="List"/>
+    <aura:attribute name="indexValue" type="Integer" default="0"/>
+    <aura:attribute name="caseNumber" type="String"/>
+    <aura:attribute name="buttonLabel" type="String" default="Start Attach to Case Batch"/>
+    <aura:attribute name="disabled" type="Boolean" default="false"/>
+    <aura:attribute name="disableBatch" type="Boolean" default="true"/>
+    <aura:attribute name="disableEmailToAttach" type="Boolean" default="false"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.checkBatchExecuting}"/>
+    <aura:attribute name="columns" type="List"/>
+    <aura:registerEvent name="attachReparentEvent" type="c:attachReparentEvent"/>
+     
+    <lightning:spinner class="slds-hide" aura:id="spinner"/> 
+    <lightning:card title="Email Unarchival">
+        <div class="slds-m-around--small">
+            <lightning:input class="slds-size_medium" aura:id="caseNumber" type="text" value="{!v.caseNumber}" label="Case Number"/>
+            <lightning:button  aura:id="submitbutton" label="Submit" onclick="{!c.findEmails}"/>
+            <lightning:button  class="slds-m-around--small" variant="brand" aura:id="Archive"  disabled="{!v.disableBatch}" label="Run Batch" onclick="{!c.runBatch}"/>
+            <lightning:button  class="slds-m-around--small" variant="brand" disabled="{!v.disabled}" aura:id="attachtocase" label="{!v.buttonLabel}" onclick="{!c.runAttachtoCase}"/>
+             <!--<lightning:button  class="slds-m-around-small" variant="brand" disabled="{!v.disableEmailToAttach}" aura:id="attachtocase" label="Start Email to Attachment" onclick="{!c.runEmailtoAttachment}"/>-->
+
+            <p class="slds-p-around--small">Archived email count : {!v.filteredEmails.length}</p>
+            <aura:if isTrue="{!!v.filteredEmails.Empty}">
+            <lightning:datatable class="slds-p-around--small"
+                                 keyField="Id"
+                                 data="{!v.filteredEmails}"
+                                 columns="{! v.columns }"
+                                 hideCheckboxColumn="true"/>
+                </aura:if>
+        </div>
+    </lightning:card>
+</aura:component>

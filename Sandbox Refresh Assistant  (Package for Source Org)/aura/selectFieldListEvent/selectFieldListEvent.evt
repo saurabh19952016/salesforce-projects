@@ -1,0 +1,4 @@
+<aura:event type="APPLICATION">
+    <aura:attribute name="fields" type="List"/>
+    <aura:attribute name="object" type="String"/>
+</aura:event>

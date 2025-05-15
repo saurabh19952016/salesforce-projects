@@ -1,0 +1,1171 @@
+<apex:page controller="DebugLogController" showHeader="false" docType="html-5.0" lightningStylesheets="true" action="{!checkTraceFlagAndLogs}">
+            <html lang="en" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <apex:slds />
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+                    <meta charset="utf-8"/>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+                    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  					 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+                 
+                    <style>
+                         .msgIcon {
+                            display: none!important
+                          }
+                          .customMessage * {
+                            color: #fff!important
+                          }
+                          .customMessage {
+                            margin: 5px 0!important;
+                            max-width: 1280px;
+                            opacity: 1!important;
+                            width: 100%;
+                            font-size: 12px;
+                            border: 0px;
+                            padding-left: 10px;
+                          }
+
+                        .pbBody{
+                        overflow:hidden;
+                        }
+                        .hide {
+                        display:none;
+                        }
+                        .spins::after {
+                        position: absolute;
+                        content: 'Please do not refresh the page';
+                        width: 100%;
+                        text-align: center;
+                        top: calc(50% + 3em);
+                        font-weight: bold;
+                        }
+                    </style>
+                    
+                    <apex:includeScript value="{!$Resource.RecordRTC}"/>
+                    <apex:includeScript value="{!$Resource.EBML}"/>
+                    <apex:includeScript value="{!$Resource.adapter}"/>
+                    <apex:includeScript value="{!$Resource.polyfill}"/>
+                    <apex:includeScript value="{!$Resource.getHTMLMediaElement}"/>
+                    <apex:includeScript value="{!$Resource.DetectRTC}"/>
+                    <script>
+						var captureOnlyClicked=false;
+                    	var captureRecordingClicked=false;
+                        function overridePageMessages(){    
+                         	console.log('ready');
+                            var textureEffect = '';
+                            $('.errorM3').addClass('slds-notify slds-notify--alert slds-theme--alert-texture slds-theme--error customMessage'); 
+                            $('.warningM3').addClass('slds-notify slds-notify--alert slds-theme--alert-texture slds-theme--warning customMessage');  
+                            $('.infoM3').addClass('slds-notify slds-notify--alert slds-theme--info slds-theme--alert-texture customMessage');  
+                            $('.confirmM3').addClass('slds-notify slds-notify--alert slds-theme--success slds-theme--alert-texture customMessage');
+   						 }
+                        function startLogCapture(){
+                           captureOnlyClicked=true;
+                            var captureBtn=document.querySelector("#btn-capture");
+                              if(captureBtn.innerHTML=="Capture Logs Only"){
+                               document.getElementById("btn-start-recording").classList.add('slds-hide');
+                               document.getElementById("save-to-disk").classList.add('slds-hide');
+                               captureBtn.innerHTML='Stop Log Capture';
+                               setTraceFlag();
+                               console.log('trace flag set');
+                               }
+                               else{
+                                   captureBtn.innerHTML='Logs Captured';
+                                    document.getElementById("spinner").style.display='block';
+                                    captureBtn.disabled=true;
+                                    getDebugLogAndDelete(true);
+                                  }
+                            }
+                        //Method to prepare a file to be attached to the Account bound to the page by the standardController
+                        function uploadFile() {
+                            var file = document.getElementById('attachmentFile').files[0];
+                            console.log(file);
+                            if(file != undefined) {
+                                if(file.size <= maxFileSize) {
+                                    attachmentName = file.name;
+                                    var fileReader = new FileReader();
+                                    fileReader.onloadend = function(e) {
+                                        attachment = window.btoa(this.result);  //Base 64 encode the file before sending it
+                                        positionIndex=0;
+                                        fileSize = attachment.length;
+                                        console.log("Total Attachment Length: " + fileSize);
+                                        doneUploading = false;
+                                        if(fileSize < maxStringSize) {
+                                            uploadAttachment(null);
+                                        } else {
+                                            alert("Base 64 Encoded file is too large.  Maximum size is " + maxStringSize + " your file is " + fileSize + ".");
+                                        }
+                                        
+                                    }
+                                    fileReader.onerror = function(e) {
+                                        alert("There was an error reading the file.  Please try again.");
+                                    }
+                                    fileReader.onabort = function(e) {
+                                        alert("There was an error reading the file.  Please try again.");
+                                    }
+                                    
+                                    fileReader.readAsBinaryString(file);  //Read the body of the file
+                                    
+                                } else {
+                                    alert("File must be under 4.3 MB in size.  Your file is too large.  Please try again.");
+                                }
+                            } else {
+                                alert("You must choose a file before trying to upload it");
+                            }
+                        }
+                         
+                    	function submitCase(){
+                              sendToSnow(captureOnlyClicked,captureRecordingClicked);
+                            }
+                        //Method to send a file to be attached to the Account bound to the page by the standardController
+                        //Sends parameters: Account Id, Attachment (body), Attachment Name, and the Id of the Attachment if it exists to the controller   
+                        function uploadAttachment(fileId) {
+                            var attachmentBody = "";
+                            if(fileSize <= positionIndex + chunkSize) {
+                                attachmentBody = attachment.substring(positionIndex);
+                                doneUploading = true;
+                                document.getElementById("j_id0:form:j_id11:j_id38:submit").className='';
+                                document.getElementById("j_id0:form:j_id11:j_id38:submit").disabled=false;
+                                alert('File Uploaded Successfully! Please submit the form to create a case in SNOW');
+                            } else {
+                                attachmentBody = attachment.substring(positionIndex, positionIndex + chunkSize);
+                            }
+                            console.log("Uploading " + attachmentBody.length + " chars of " + fileSize);
+                            DebugLogController.doUploadAttachment(
+                                attachmentBody, attachmentName, fileId, 
+                                function(result, event) {
+                                    console.log(result);
+                                    if(event.type === 'exception') {
+                                        console.log("exception");
+                                        console.log(event);
+                                    } else if(event.status) {
+                                        if(result.substring(0,3) == '00P') {
+                                            positionIndex += chunkSize;
+                                            uploadAttachment(result);
+                                        }
+                                    } else {
+                                        console.log(event.message);
+                                    }
+                                },
+                                {buffer: true, escape: true, timeout: 120000}
+                            );
+                        }                           
+                    
+                    function setTraceFlag(){
+                            Visualforce.remoting.Manager.invokeAction(
+                                '{!$RemoteAction.DebugLogController.setTraceFlag}',
+                                function(result, event){
+                                    if (event.status) {
+                                        // Get DOM IDs for HTML and Visualforce elements like this
+                                        document.getElementById('TraceFlagId').value = result;
+                                    }
+                                    if (event.type === 'exception') {
+                                        
+                                        //document.getElementById("responseErrors").innerHTML = 
+                                        // event.message + "<br/>\n<pre>" + event.where + "</pre>";
+                                    } else {
+                                        // document.getElementById("responseErrors").innerHTML = event.message;
+                                    }
+                                }
+                            );   
+                        }
+                        function getDebugLogAndDelete(captureOnly){
+                            Visualforce.remoting.Manager.invokeAction(
+                                '{!$RemoteAction.DebugLogController.getDebugLogs}',
+                                     document.getElementById('TraceFlagId').value,                
+                                function(result, event){
+                                    if(event.status){
+                                        Logids=result;
+                                        console.log(Logids);
+                                        if(captureOnly==true){
+                                            saveDebugLogs();
+                                        }
+                                    }
+                                    if (event.type === 'exception') {
+                                        
+                                        // document.getElementById("responseErrors").innerHTML = 
+                                        // event.message + "<br/>\n<pre>" + event.where + "</pre>";
+                                    } else {
+                                        // document.getElementById("responseErrors").innerHTML = event.message;
+                                    }
+                                }
+                            );
+                           
+                        }
+                        function saveDebugLogs(){
+                            var completed=0;
+                            for(var id in Logids){
+                                console.log(Logids[id]);
+                                Visualforce.remoting.Manager.invokeAction(
+                                    '{!$RemoteAction.DebugLogController.getLogBody}',
+                                    Logids[id],
+                                    function(result, event){
+                                        completed++;
+                                        if(Logids.length == completed){
+                                            document.getElementById("spinner").style.display='none';
+                                        }
+                                        if (event.type === 'exception') {
+                                            
+                                            //document.getElementById("responseErrors").innerHTML = 
+                                            // event.message + "<br/>\n<pre>" + event.where + "</pre>";
+                                        } else {
+                                            //document.getElementById("responseErrors").innerHTML = event.message;
+                                        }
+                                    }
+                                );
+                            }
+                            
+                        }
+                    </script>
+                    
+                </head>
+                
+                <apex:form id="form">
+                        <header style="text-align: center;">
+                        </header>
+                        <div id="spinner" style="display:none">
+                            <div class="slds-spinner_container spins">
+                                <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                                    <span class="slds-assistive-text">Loading</span>
+                                    <div class="slds-spinner__dot-a"></div>
+                                    <div class="slds-spinner__dot-b"></div>
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="slds-m-around--small">
+                        <input type="hidden" id='TraceFlagId'/>
+                                 <div class="slds-page-header slds-m-bottom--medium">
+                                      <div class="slds-page-header__row">
+                                        <div class="slds-page-header__col-title">
+                                          <div class="slds-media">
+                                            <div class="slds-media__figure">
+                                             <span class="slds-icon_container slds-icon-standard-customer-360" >
+                                                <svg class="slds-icon slds-page-header__icon" aria-hidden="true">
+                                                    <use xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/standard-sprite/svg/symbols.svg#customer_360')}"></use>
+                                                </svg>
+                                                <span class="slds-assistive-text">Customer Support</span>
+                                              </span>
+                                            </div>
+                                            <div class="slds-media__body">
+                                              <div class="slds-page-header__name">
+                                                <div class="slds-page-header__name-title">
+                                                  <h1>
+                                                    <span class="slds-page-header__title slds-truncate" title="Customer Support">Customer Support</span>
+                                                  </h1>
+                                                </div>
+                                              </div>
+                                              <p class="slds-page-header__name-meta">Customer Support with Screen recorder and log capture</p>
+                                            </div>
+                                         
+                                          </div>
+                                        </div>
+                                        <div class="slds-page-header__col-actions">
+                                          <div class="slds-page-header__controls">  
+                                          <div class="slds-page-header__control">
+                                              <ul class="slds-button-group-list">
+                                                    <li> 
+                                                      <button onclick="startLogCapture()" id="btn-capture" class="slds-button slds-button_brand slds-button_neutral" type="button">Capture Logs Only</button>
+                                                     </li>
+                                                     <li>
+                                                       <button id="btn-start-recording" class="slds-button slds-button_brand slds-button_neutral" type="button">Start Recording</button>
+                                                     </li>
+                                                     <li>
+                                                        <button id="btn-pause-recording" class="slds-button slds-button_brand slds-button_neutral" style="display: none; font-size: 15px;" type="button">Pause</button>
+                                                     </li>
+                                                     <li>
+                                                        <input class="slds-button slds-button_neutral slds-button_success" disabled="true" type="button" id="save-to-disk"  value="Save Recording"/>                                
+                                                     </li>
+                                               </ul>
+                                             </div>
+                                             </div>
+                                          </div>     
+                                      </div>
+                                    </div>
+                                     <select class="recording-media hide">
+                                            <option value="record-screen">Full Screen</option>
+                                        </select>
+                                        <select class="hide media-container-format">
+                                            <option>mp4</option>
+                                        </select>
+                                        
+                                        <select class="media-resolutions hide">
+                                            <option value="default">Default resolutions</option>
+                                        </select>
+                                        
+                                        <select class="media-framerates hide">
+                                            <option value="default">Default framerates</option>
+                                        </select>
+                                        
+                                        <select class="media-bitrates hide">
+                                            <option value="default">Default bitrates</option>
+                                        </select>                          
+                                <div class="slds-grid slds-gutters">
+                                  <div class="slds-col slds-size_7-of-12">
+                                   <span> 
+                                       <article class="slds-card">
+                                      <div class="slds-card__header slds-grid">
+                                     
+                                     <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                                       <div class="slds-media__figure">
+                                         <span class="slds-icon_container slds-icon-action-new-case slds-icon_container--circle" >
+                                         <svg aria-hidden="true" class="slds-icon slds-icon slds-icon--small">
+                                            <use xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/action-sprite/svg/symbols.svg#new_case')}"></use>
+
+                                         </svg>
+                                         <span class="slds-assistive-text">Create Support Ticket</span>
+                                        </span>
+                                        </div>
+                                          <div class="slds-media__body">
+                                                <h2 class="slds-card__header-title">
+                                                  <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="Create Support Ticket">
+                                                <span>Create Support Ticket</span>
+                                                  </a>
+                                                </h2>
+                                             </div>
+                                        </header>
+                                  </div>
+                                   <div class="slds-card__body slds-is-relative slds-card__body_inner slds-m-around--small">
+                                     <apex:outputPanel id="errmsg">
+
+                                       <apex:pageMessages />
+                                       </apex:outputPanel>
+                                      <div class="slds-form-element">
+                                      
+                                       <div class="slds-form-element__control slds-m-around--small">
+                                         <label class="slds-form-element__label" for="text-input-id-1">
+                                            <abbr class="slds-required" title="required">* </abbr>Enter Case Subject</label>
+                                        <apex:inputText styleClass="slds-input" value="{!subject}"/>
+                                      </div>
+                                    
+                                      <div class="slds-form-element__control slds-m-around--small">
+                                         <label class="slds-form-element__label" for="text-input-id-1">
+                                            <abbr class="slds-required" title="required">* </abbr>Enter Case Description</label>
+                                           <apex:inputTextArea styleClass="slds-textarea" value="{!description}" />
+                                       </div>                     
+                                       <div class="slds-form-element__control slds-m-around--small">
+                                           <input type="file" id="attachmentFile"/>
+                                            <apex:commandlink styleClass="slds-button slds-button_neutral" value="Upload file" rerender="none"  status="myStatus" onclick="uploadFile()">
+                                                 <svg class="slds-button__icon slds-button__icon_left slds-m-left--small" aria-hidden="true">
+                                                    <use xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#upload')}"></use>
+                                                    </svg>
+                                            </apex:commandlink>
+                                          </div>
+                                    <!--<apex:inputFile fileName="{!attachment.name}" value="{!attachment.body}"/>-->
+                                       <div class="slds-form-element__control slds-m-around--small">
+                                            <apex:commandlink styleClass="slds-button slds-button_brand" id="submit" value="Submit Case" onclick="submitCase()" rerender="none">
+                                                    <svg class="slds-button__icon slds-button__icon_left slds-m-left--small" aria-hidden="true">
+                                                    <use xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#send')}"></use>
+                                                    </svg>
+                                            </apex:commandLink>
+                                           <apex:actionFunction name="sendToSnow" action="{!sendToSnow}"  rerender="errmsg" status="myStatus" oncomplete="overridePageMessages()">
+												<apex:param name="clickCapture" assignTo="{!clickCapture}" value="" />
+												<apex:param name="clickRecord" assignTo="{!clickRecord}" value="" />
+                                           </apex:actionFunction>
+                                        </div>
+                                    <apex:actionStatus id="myStatus">
+                                        <apex:facet name="start">
+                                            <div class="slds-spinner_container spins">
+                                                <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+                                                    <span class="slds-assistive-text">Loading</span>
+                                                    <div class="slds-spinner__dot-a"></div>
+                                                    <div class="slds-spinner__dot-b"></div>
+                                                </div>
+                                            </div>
+                                        </apex:facet>
+                                    </apex:actionStatus>
+                                    </div>
+                                    </div>
+                                  </article>
+                                 </span>
+                                </div>
+                                <div class="slds-col slds-size_5-of-12">
+                                   <span>
+                                       <article class="slds-card">
+                                      <div class="slds-card__header slds-grid">
+                                     
+                                     <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                                       <div class="slds-media__figure">
+                                         <span class="slds-icon_container slds-icon-custom-custom22 slds-icon-text-default" >
+                                         <svg aria-hidden="true" class="slds-icon">
+                                            <use xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/standard-sprite/svg/symbols.svg#contact_list')}"></use>
+
+                                         </svg>
+                                         <span class="slds-assistive-text">Instructions</span>
+                                        </span>
+                                        </div>
+                                          <div class="slds-media__body">
+                                                <h2 class="slds-card__header-title">
+                                                  <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="Instructions">
+                                                <span>Instructions</span>
+                                                  </a>
+                                                </h2>
+                                             </div>
+                                        </header>
+                                  </div>
+                                   <div class="slds-card__body slds-card__body_inner slds-m-around--small">
+										<ol class="slds-list_ordered slds-has-dividers_around-space">
+											<apex:repeat value="{!instructionSet}" var="Instruction">
+                                           	 <li class="slds-item">{!Instruction}</li>
+                                       		</apex:repeat>      
+                                       </ol>
+                                </div>
+                                   <footer class="slds-card__footer">
+                                        <p class="slds-box slds-theme_shade">
+                                        <b>Note : <i>{!Note}</i></b>
+                                           </p>
+                                    </footer>
+                                 </article>
+                                 </span>
+                                </div>
+                            </div>
+                            </div>
+                        <script type="text/javascript">
+                        var maxStringSize = 6000000;    //Maximum String size is 6,000,000 characters
+                        var maxFileSize = 5120000;      //After Base64 Encoding, this is the max file size
+                        var chunkSize = 950000;         //Maximum Javascript Remoting message size is 1,000,000 characters
+                        var attachment;
+                        var attachmentName;
+                        var fileSize;
+                        var positionIndex;
+                        var doneUploading;
+        
+                        var btnStartRecording = document.querySelector('#btn-start-recording');
+                        
+                        (function() {
+                            var params = {},
+                                r = /([^&=]+)=?([^&]*)/g;
+                            function d(s) {
+                                return decodeURIComponent(s.replace(/\+/g, ' '));
+                            }
+                            var match, search = window.location.search;
+                            while (match = r.exec(search.substring(1))) {
+                                params[d(match[1])] = d(match[2]);
+                                if(d(match[2]) === 'true' || d(match[2]) === 'false') {
+                                    params[d(match[1])] = d(match[2]) === 'true' ? true : false;
+                                }
+                            }
+                            window.params = params;
+                        })();
+                        function addStreamStopListener(stream, callback) {
+                            stream.addEventListener('ended', function() {
+                                callback();
+                                callback = function() {};
+                            }, false);
+                            stream.addEventListener('inactive', function() {
+                                callback();
+                                callback = function() {};
+                            }, false);
+                            stream.getTracks().forEach(function(track) {
+                                track.addEventListener('ended', function() {
+                                    callback();
+                                    callback = function() {};
+                                }, false);
+                                track.addEventListener('inactive', function() {
+                                    callback();
+                                    callback = function() {};
+                                }, false);
+                            });
+                        }
+                        </script>
+                        
+                        <script>
+                        var Logids;
+                        var video = document.createElement('video');
+                        video.controls = false;
+         
+                        var mediaElement = getHTMLMediaElement(video, {
+                            title: 'Recording status: inactive',
+                            buttons: ['full-screen'/*, 'take-snapshot'*/],
+                            showOnMouseEnter: false,
+                            width: 360,
+                            onTakeSnapshot: function() {
+                                var canvas = document.createElement('canvas');
+                                canvas.width = mediaElement.clientWidth;
+                                canvas.height = mediaElement.clientHeight;
+                                var context = canvas.getContext('2d');
+                                context.drawImage(recordingPlayer, 0, 0, canvas.width, canvas.height);
+                                window.open(canvas.toDataURL('image/png'));
+                            }
+                        });
+                        var div = document.createElement('section');
+                        mediaElement.media.parentNode.appendChild(div);
+                        mediaElement.media.muted = false;
+                        mediaElement.media.autoplay = true;
+                        mediaElement.media.playsinline = true;
+                        div.appendChild(mediaElement.media);
+                        
+                        var recordingPlayer = mediaElement.media;
+                        var mediaContainerFormat = document.querySelector('.media-container-format');
+                        var mimeType = 'video/webm';
+                        var fileExtension = 'webm';
+                        var type = 'video';
+                        var recorderType;
+                        var defaultWidth;
+                        var defaultHeight;
+                        var btnStartRecording = document.querySelector('#btn-start-recording');
+                        /*window.onbeforeunload = function() {
+                        btnStartRecording.disabled = false;
+                        mediaContainerFormat.disabled = false;
+                    };*/
+                        btnStartRecording.onclick = function(event) {
+                                  document.getElementById("btn-capture").style.display='none';
+                            captureRecordingClicked=true;
+                            var button = btnStartRecording;
+                            if(button.innerHTML === 'Start Recording') {
+                                setTraceFlag();                    
+                            }
+                            if(button.innerHTML === 'Stop Recording') {
+                                btnPauseRecording.style.display = 'none';
+                                document.getElementById("save-to-disk").disabled=false;
+                                button.disabled = true;
+                                button.disableStateWaiting = true;
+                                setTimeout(function() {
+                                    button.disabled = false;
+                                    button.disableStateWaiting = false;
+                                }, 2000);
+                                getDebugLogAndDelete(false);
+                                button.innerHTML = 'Start Recording';
+                                
+                                function stopStream() {
+                                    if(button.stream && button.stream.stop) {
+                                        button.stream.stop();
+                                        button.stream = null;
+                                    }
+                                    if(button.stream instanceof Array) {
+                                        button.stream.forEach(function(stream) {
+                                            stream.stop();
+                                        });
+                                        button.stream = null;
+                                    }
+                                    videoBitsPerSecond = null;
+                                    var html = 'Recording status: stopped';
+                                    html += '<br>Size: ' + bytesToSize(button.recordRTC.getBlob().size);
+                                    recordingPlayer.parentNode.parentNode.querySelector('h2').innerHTML = html;
+                                }
+                                if(button.recordRTC) {
+                                    if(button.recordRTC.length) {
+                                        button.recordRTC[0].stopRecording(function(url) {
+                                            if(!button.recordRTC[1]) {
+                                                button.recordingEndedCallback(url);
+                                                stopStream();
+                                                saveToDiskOrOpenNewTab(button.recordRTC[0]);
+                                                return;
+                                            }
+                                            button.recordRTC[1].stopRecording(function(url) {
+                                                button.recordingEndedCallback(url);
+                                                stopStream();
+                                            });
+                                        });
+                                    }
+                                    else {
+                                        button.recordRTC.stopRecording(function(url) {
+                                            if(button.blobs && button.blobs.length) {
+                                                var blob = new File(button.blobs, getFileName(fileExtension), {
+                                                    type: mimeType
+                                                });
+                                                
+                                                button.recordRTC.getBlob = function() {
+                                                    return blob;
+                                                };
+                                                url = URL.createObjectURL(blob);
+                                            }
+                                            
+                                            button.recordingEndedCallback(url);
+                                            saveToDiskOrOpenNewTab(button.recordRTC);
+                                            stopStream();
+                                        });
+                                    }
+                                }
+                                return;
+                            }
+                            if(!event) return;
+                            button.disabled = true;
+                            var commonConfig = {
+                                onMediaCaptured: function(stream) {
+                                    button.stream = stream;
+                                    if(button.mediaCapturedCallback) {
+                                        button.mediaCapturedCallback();
+                                    }
+                                    button.innerHTML = 'Stop Recording';
+                                    button.disabled = false;
+                                },
+                                onMediaStopped: function() {
+                                    button.innerHTML = 'Start Recording';
+                                    if(!button.disableStateWaiting) {
+                                        button.disabled = false;
+                                    }
+                                },
+                                onMediaCapturingFailed: function(error) {
+                                    console.error('onMediaCapturingFailed:', error);
+                                    if(error.toString().indexOf('no audio or video tracks available') !== -1) {
+                                        alert('RecordRTC failed to start because there are no audio or video tracks available.');
+                                    }
+                                    
+                                    if(error.name === 'PermissionDeniedError' && DetectRTC.browser.name === 'Firefox') {
+                                        alert('Firefox requires version >= 52. Firefox also requires HTTPs.');
+                                    }
+                                    commonConfig.onMediaStopped();
+                                }
+                            };
+                            if(mediaContainerFormat.value === 'mp4') {
+                                mimeType = 'video/webm\;codecs=h264';
+                                fileExtension = 'mp4';
+                                // video/mp4;codecs=avc1    
+                                if(isMimeTypeSupported('video/mpeg')) {
+                                    mimeType = 'video/mpeg';
+                                }
+                            }
+                            /*if(mediaContainerFormat.value === 'mkv' && isMimeTypeSupported('video/x-matroska;codecs=avc1')) {
+                            mimeType = 'video/x-matroska;codecs=avc1';
+                            fileExtension = 'mkv';
+                        }
+        
+                        if(mediaContainerFormat.value === 'gif') {
+                            mimeType = 'image/gif';
+                            fileExtension = 'gif';
+                            recorderType = GifRecorder;
+                            type = 'gif';
+                        }
+                        if(mediaContainerFormat.value === 'default') {
+                              mimeType = 'video/webm\;codecs=h264';
+                            fileExtension = 'mp4';
+                            recorderType = null;
+                            type = 'video';
+                        }
+                        */
+                            captureScreen(commonConfig);
+                            button.mediaCapturedCallback = function() {
+                                var options = {
+                                    type: type,
+                                    mimeType: mimeType,
+                                    disableLogs: params.disableLogs || false,
+                                    getNativeBlob: false, // enable it for longer recordings
+                                    video: recordingPlayer
+                                };
+                                if(recorderType) {
+                                    options.recorderType = recorderType;
+                                    if(recorderType == WhammyRecorder || recorderType == GifRecorder || recorderType == WebAssemblyRecorder) {
+                                        options.canvas = options.video = {
+                                            width: defaultWidth || 320,
+                                            height: defaultHeight || 240
+                                        };
+
+                                    }
+                                }
+                                if(videoBitsPerSecond) {
+                                    options.videoBitsPerSecond = videoBitsPerSecond;
+                                }
+                                options.ignoreMutedMedia = false;
+                                button.recordRTC = RecordRTC(button.stream, options);
+                                button.recordingEndedCallback = function(url) {
+                                    setVideoURL(url);
+                                };
+                                button.recordRTC.startRecording();
+                                console.log(options.video.height);
+                                        console.log(options.video.width);
+                                btnPauseRecording.style.display = '';
+                            };
+                            // note: audio+tab is supported in Chrome 50+
+                            // todo: add audio+tab recording
+                            
+                        };
+                        function captureVideo(config) {
+                            captureUserMedia({video: true}, function(videoStream) {
+                                config.onMediaCaptured(videoStream);
+                                addStreamStopListener(videoStream, function() {
+                                    config.onMediaStopped();
+                                });
+                            }, function(error) {
+                                config.onMediaCapturingFailed(error);
+                            });
+                        }
+                        
+                        /* var MY_DOMAIN = 'webrtc-experiment.com';
+                         function isMyOwnDomain() {
+                            // replace "webrtc-experiment.com" with your own domain name
+                            return document.domain.indexOf(MY_DOMAIN) !== -1;
+                        }
+                        function isLocalHost() {
+                            // "chrome.exe" --enable-usermedia-screen-capturing
+                            // or firefox => about:config => "media.getusermedia.screensharing.allowed_domains" => add "localhost"
+                            return document.domain === 'localhost' || document.domain === '127.0.0.1';
+                        }*/
+                        var videoBitsPerSecond;
+                        function setVideoBitrates() {
+                            var select = document.querySelector('.media-bitrates');
+                            var value = select.value;
+                            if(value == 'default') {
+                                videoBitsPerSecond = null;
+                                return;
+                            }
+                            videoBitsPerSecond = parseInt(value);
+                        }
+                        function getFrameRates(mediaConstraints) {
+                            if(!mediaConstraints.video) {
+                                return mediaConstraints;
+                            }
+                            var select = document.querySelector('.media-framerates');
+                            var value = select.value;
+                            if(value == 'default') {
+                                return mediaConstraints;
+                            }
+                            value = parseInt(value);
+                            if(DetectRTC.browser.name === 'Firefox') {
+                                mediaConstraints.video.frameRate = value;
+                                return mediaConstraints;
+                            }
+                            if(!mediaConstraints.video.mandatory) {
+                                mediaConstraints.video.mandatory = {};
+                                mediaConstraints.video.optional = [];
+                            }
+                            
+                            return mediaConstraints;
+                        }
+                        function setGetFromLocalStorage(selectors) {
+                            selectors.forEach(function(selector) {
+                                var storageItem = selector.replace(/\.|#/g, '');
+                                if(localStorage.getItem(storageItem)) {
+                                    document.querySelector(selector).value = localStorage.getItem(storageItem);
+                                }
+                                addEventListenerToUploadLocalStorageItem(selector, ['change', 'blur'], function() {
+                                    localStorage.setItem(storageItem, document.querySelector(selector).value);
+                                });
+                            });
+                        }
+                        function addEventListenerToUploadLocalStorageItem(selector, arr, callback) {
+                            arr.forEach(function(event) {
+                                document.querySelector(selector).addEventListener(event, callback, false);
+                            });
+                        }
+                        setGetFromLocalStorage(['.media-resolutions', '.media-framerates', '.media-bitrates', '.recording-media', '.media-container-format']);
+                        function getVideoResolutions(mediaConstraints) {
+                            if(!mediaConstraints.video) {
+                                return mediaConstraints;
+                            }
+                            var select = document.querySelector('.media-resolutions');
+                            var value = select.value;
+                            if(value == 'default') {
+                                return mediaConstraints;
+                            }
+                            value = value.split('x');
+                            if(value.length != 2) {
+                                return mediaConstraints;
+                            }
+                            defaultWidth = parseInt(value[0]);
+                            defaultHeight = parseInt(value[1]);
+                            if(DetectRTC.browser.name === 'Firefox') {
+                                mediaConstraints.video.width = defaultWidth;
+                                mediaConstraints.video.height = defaultHeight;
+                                return mediaConstraints;
+                            }
+                            if(!mediaConstraints.video.mandatory) {
+                                mediaConstraints.video.mandatory = {};
+                                mediaConstraints.video.optional = [];
+                            }
+                            
+                            return mediaConstraints;
+                        }
+                        function captureUserMedia(mediaConstraints, successCallback, errorCallback) {
+                            if(mediaConstraints.video == true) {
+                                mediaConstraints.video = {};
+                            }
+                            setVideoBitrates();
+                            mediaConstraints = getVideoResolutions(mediaConstraints);
+                            mediaConstraints = getFrameRates(mediaConstraints);
+                            var isBlackBerry = !!(/BB10|BlackBerry/i.test(navigator.userAgent || ''));
+                            if(isBlackBerry && !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia)) {
+                                navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                                navigator.getUserMedia(mediaConstraints, successCallback, errorCallback);
+                                return;
+                            }
+                            navigator.mediaDevices.getUserMedia(mediaConstraints).then(function(stream) {
+                                successCallback(stream);
+                                setVideoURL(stream, true);
+                            }).catch(function(error) {
+                                if(error && (error.name === 'ConstraintNotSatisfiedError' || error.name === 'OverconstrainedError')) {
+                                    alert('Your camera or browser does NOT supports selected resolutions or frame-rates. \n\nPlease select "default" resolutions.');
+                                }
+                                else if(error && error.message) {
+                                    alert(error.message);
+                                }
+                                    else {
+                                        alert('Unable to make getUserMedia request. Please check browser console logs.');
+                                    }
+                                errorCallback(error);
+                            });
+                        }
+                        function setMediaContainerFormat(arrayOfOptionsSupported) {
+                            var options = Array.prototype.slice.call(
+                                mediaContainerFormat.querySelectorAll('option')
+                            );
+                            var localStorageItem;
+                            if(localStorage.getItem('media-container-format')) {
+                                localStorageItem = localStorage.getItem('media-container-format');
+                            }
+                            var selectedItem;
+                            options.forEach(function(option) {
+                                option.disabled = true;
+                                if(arrayOfOptionsSupported.indexOf(option.value) !== -1) {
+                                    option.disabled = false;
+                                    if(localStorageItem && arrayOfOptionsSupported.indexOf(localStorageItem) != -1) {
+                                        if(option.value != localStorageItem) return;
+                                        option.selected = true;
+                                        selectedItem = option;
+                                        return;
+                                    }
+                                    if(!selectedItem) {
+                                        option.selected = true;
+                                        selectedItem = option;
+                                    }
+                                }
+                            });
+                        }
+                        function isMimeTypeSupported(mimeType) {
+                            if(typeof MediaRecorder === 'undefined') {
+                                return false;
+                            }
+                            if(typeof MediaRecorder.isTypeSupported !== 'function') {
+                                return true;
+                            }
+                            return MediaRecorder.isTypeSupported(mimeType);
+                        }
+                        
+                        if(typeof MediaRecorder === 'undefined' && (DetectRTC.browser.name === 'Edge' || DetectRTC.browser.name === 'Safari')) {
+                            // webp isn't supported in Microsoft Edge
+                            // neither MediaRecorder API
+                            // so lets disable both video/screen recording options
+                            console.warn('Neither MediaRecorder API nor webp is supported in ' + DetectRTC.browser.name + '. You cam merely record audio.');
+                            recordingMedia.innerHTML = '<option value="record-audio">Audio</option>';
+                            setMediaContainerFormat(['pcm']);
+                        }
+                        function stringify(obj) {
+                            var result = '';
+                            Object.keys(obj).forEach(function(key) {
+                                if(typeof obj[key] === 'function') {
+                                    return;
+                                }
+                                if(result.length) {
+                                    result += ',';
+                                }
+                                result += key + ': ' + obj[key];
+                            });
+                            return result;
+                        }
+                        function mediaRecorderToStringify(mediaRecorder) {
+                            var result = '';
+                            result += 'mimeType: ' + mediaRecorder.mimeType;
+                            result += ', state: ' + mediaRecorder.state;
+                            result += ', audioBitsPerSecond: ' + mediaRecorder.audioBitsPerSecond;
+                            result += ', videoBitsPerSecond: ' + mediaRecorder.videoBitsPerSecond;
+                            if(mediaRecorder.stream) {
+                                result += ', streamid: ' + mediaRecorder.stream.id;
+                                result += ', stream-active: ' + mediaRecorder.stream.active;
+                            }
+                            return result;
+                        }
+                        function getFailureReport() {
+                            var info = 'RecordRTC seems failed. \n\n' + stringify(DetectRTC.browser) + '\n\n' + DetectRTC.osName + ' ' + DetectRTC.osVersion + '\n';
+                            if (typeof recorderType !== 'undefined' && recorderType) {
+                                info += '\nrecorderType: ' + recorderType.name;
+                            }
+                            if (typeof mimeType !== 'undefined') {
+                                info += '\nmimeType: ' + mimeType;
+                            }
+                            Array.prototype.slice.call(document.querySelectorAll('select')).forEach(function(select) {
+                                info += '\n' + (select.id || select.className) + ': ' + select.value;
+                            });
+                            if (btnStartRecording.recordRTC) {
+                                info += '\n\ninternal-recorder: ' + btnStartRecording.recordRTC.getInternalRecorder().name;
+                                
+                                if(btnStartRecording.recordRTC.getInternalRecorder().getAllStates) {
+                                    info += '\n\nrecorder-states: ' + btnStartRecording.recordRTC.getInternalRecorder().getAllStates();
+                                }
+                            }
+                            if(btnStartRecording.stream) {
+                                info += '\n\naudio-tracks: ' + getTracks(btnStartRecording.stream, 'audio').length;
+                                info += '\nvideo-tracks: ' + getTracks(btnStartRecording.stream, 'video').length;
+                                info += '\nstream-active? ' + !!btnStartRecording.stream.active;
+                                btnStartRecording.stream.getTracks().forEach(function(track) {
+                                    info += '\n' + track.kind + '-track-' + (track.label || track.id) + ': (enabled: ' + !!track.enabled + ', readyState: ' + track.readyState + ', muted: ' + !!track.muted + ')';
+                                    if(track.getConstraints && Object.keys(track.getConstraints()).length) {
+                                        info += '\n' + track.kind + '-track-getConstraints: ' + stringify(track.getConstraints());
+                                    }
+                                    if(track.getSettings && Object.keys(track.getSettings()).length) {
+                                        info += '\n' + track.kind + '-track-getSettings: ' + stringify(track.getSettings());
+                                    }
+                                });
+                            }
+                            if(timeSlice && btnStartRecording.recordRTC) {
+                                info += '\ntimeSlice: ' + timeSlice;
+                                if(btnStartRecording.recordRTC.getInternalRecorder().getArrayOfBlobs) {
+                                    var blobSizes = [];
+                                    btnStartRecording.recordRTC.getInternalRecorder().getArrayOfBlobs().forEach(function(blob) {
+                                        blobSizes.push(blob.size);
+                                    });
+                                    info += '\nblobSizes: ' + blobSizes;
+                                }
+                            }
+                            else if(btnStartRecording.recordRTC && btnStartRecording.recordRTC.getBlob()) {
+                                info += '\n\nblobSize: ' + bytesToSize(btnStartRecording.recordRTC.getBlob().size);
+                            }
+                            if(btnStartRecording.recordRTC && btnStartRecording.recordRTC.getInternalRecorder() && btnStartRecording.recordRTC.getInternalRecorder().getInternalRecorder && btnStartRecording.recordRTC.getInternalRecorder().getInternalRecorder()) {
+                                info += '\n\ngetInternalRecorder: ' + mediaRecorderToStringify(btnStartRecording.recordRTC.getInternalRecorder().getInternalRecorder());
+                            }
+                            return info;
+                        }
+                        function saveToDiskOrOpenNewTab(recordRTC) {
+                            if(!recordRTC.getBlob().size) {
+                                var info = getFailureReport();
+                                console.log('blob', recordRTC.getBlob());
+                                console.log('recordrtc instance', recordRTC);
+                                console.log('report', info);
+                                if(mediaContainerFormat.value !== 'default') {
+                                    alert('RecordRTC seems failed recording using ' + mediaContainerFormat.value + '. Please choose "default" option from the drop down and record again.');
+                                }
+                                else {
+                                    alert('RecordRTC seems failed. Unexpected issue. You can read the email in your console log. \n\nPlease report using disqus chat below.');
+                                }
+                                if(mediaContainerFormat.value !== 'vp9' && DetectRTC.browser.name === 'Chrome') {
+                                    alert('Please record using VP9 encoder. (select from the dropdown)');
+                                }
+                            }
+                            var fileName = getFileName(fileExtension);
+                            document.querySelector('#save-to-disk').parentNode.style.display = 'block';
+                            document.querySelector('#save-to-disk').onclick = function() {
+                                document.getElementById("btn-start-recording").disabled=true;
+                                document.getElementById("spinner").style.display='block';
+                                if(!recordRTC) return alert('No recording found.');
+                                var file = new File([recordRTC.getBlob()], fileName, {
+                                    type: mimeType
+                                });
+                                console.log(recordRTC.getBlob());
+                                if(Logids.length==0){
+                                    document.getElementById("spinner").style.display='none';
+                                }                      
+     
+                                console.log(URL.createObjectURL(file));  
+                                invokeSaveAsDialog(file, file.name);
+                                console.log(Logids);
+                                saveDebugLogs();
+                                alert('Please fill the form to create a case in service now.\n Optionally, you can also upload the recorded video to salesforce to help support understand your issue better.');
+                            };
+                            
+                            
+                            // upload to PHP server
+                            
+                        }
+                        /* function uploadToPHPServer(fileName, recordRTC, callback) {
+                        var blob = recordRTC instanceof Blob ? recordRTC : recordRTC.getBlob();
+                        
+                        blob = new File([blob], getFileName(fileExtension), {
+                            type: mimeType
+                        });
+                        // create FormData
+                        var formData = new FormData();
+                        formData.append('video-filename', fileName);
+                        formData.append('video-blob', blob);
+                        callback('Uploading recorded-file to server.');
+                        // var upload_url = 'https://your-domain.com/files-uploader/';
+                        var upload_url = 'RecordRTC-to-PHP/save.php';
+                        // var upload_directory = upload_url;
+                        var upload_directory = 'RecordRTC-to-PHP/uploads/';
+                        makeXMLHttpRequest(upload_url, formData, function(progress) {
+                            if (progress !== 'upload-ended') {
+                                callback(progress);
+                                return;
+                            }
+                            callback('ended', upload_directory + fileName);
+                        });
+                    }
+                    function makeXMLHttpRequest(url, data, callback) {
+                        var request = new XMLHttpRequest();
+                        request.onreadystatechange = function() {
+                            if (request.readyState == 4 && request.status == 200) {
+                                if(request.responseText === 'success') {
+                                    callback('upload-ended');
+                                    return;
+                                }
+                                document.querySelector('.header').parentNode.style = 'text-align: left; color: red; padding: 5px 10px;';
+                                document.querySelector('.header').parentNode.innerHTML = request.responseText;
+                            }
+                        };
+                        request.upload.onloadstart = function() {
+                            callback('Upload started...');
+                        };
+                        request.upload.onprogress = function(event) {
+                            callback('Upload Progress ' + Math.round(event.loaded / event.total * 100) + "%");
+                        };
+                        request.upload.onload = function() {
+                            callback('progress-about-to-end');
+                        };
+                        request.upload.onload = function() {
+                            callback('Getting File URL..');
+                        };
+                        request.upload.onerror = function(error) {
+                            callback('Failed to upload to server');
+                        };
+                        request.upload.onabort = function(error) {
+                            callback('Upload aborted.');
+                        };
+                        request.open('POST', url);
+                        request.send(data);
+                    }*/
+                        function getRandomString() {
+                            if (window.crypto && window.crypto.getRandomValues && navigator.userAgent.indexOf('Safari') === -1) {
+                                var a = window.crypto.getRandomValues(new Uint32Array(3)),
+                                    token = '';
+                                for (var i = 0, l = a.length; i < l; i++) {
+                                    token += a[i].toString(36);
+                                }
+                                return token;
+                            } else {
+                                return (Math.random() * new Date().getTime()).toString(36).replace(/\./g, '');
+                            }
+                        }
+                        function getFileName(fileExtension) {
+                            var d = new Date();
+                            var year = d.getUTCFullYear();
+                            var month = d.getUTCMonth();
+                            var date = d.getUTCDate();
+                            return 'RecordRTC-' + year + month + date + '-' + getRandomString() + '.' + fileExtension;
+                        }
+                        
+                        function getURL(arg) {
+                            var url = arg;
+                            if(arg instanceof Blob || arg instanceof File) {
+                                url = URL.createObjectURL(arg);
+                            }
+                            if(arg instanceof RecordRTC || arg.getBlob) {
+                                url = URL.createObjectURL(arg.getBlob());
+                            }
+                            if(arg instanceof MediaStream || arg.getTracks) {
+                                // url = URL.createObjectURL(arg);
+                            }
+                            return url;
+                        }
+                        function setVideoURL(arg, forceNonImage) {
+                            var url = getURL(arg);
+                            var parentNode = recordingPlayer.parentNode;
+                            parentNode.removeChild(recordingPlayer);
+                            parentNode.innerHTML = '';
+                            var elem = 'video';
+                            recordingPlayer = document.createElement(elem);
+                            if(arg instanceof MediaStream) {
+                                recordingPlayer.muted = true;
+                            }
+                            recordingPlayer.addEventListener('loadedmetadata', function() {
+                                if(navigator.userAgent.toLowerCase().indexOf('android') == -1) return;
+                                // android
+                                setTimeout(function() {
+                                    if(typeof recordingPlayer.play === 'function') {
+                                        recordingPlayer.play();
+                                    }
+                                }, 2000);
+                            }, false);
+                            recordingPlayer.poster = '';
+                            if(arg instanceof MediaStream) {
+                                recordingPlayer.srcObject = arg;
+                            }
+                            else {
+                                recordingPlayer.src = url;
+                            }
+                            if(typeof recordingPlayer.play === 'function') {
+                                recordingPlayer.play();
+                            }
+                            recordingPlayer.addEventListener('ended', function() {
+                                url = getURL(arg);
+                                
+                                if(arg instanceof MediaStream) {
+                                    recordingPlayer.srcObject = arg;
+                                }
+                                else {
+                                    recordingPlayer.src = url;
+                                }
+                            });
+                            parentNode.appendChild(recordingPlayer);
+                        }
+                        </script>
+                        
+                        <script>
+                        function captureScreen(config) {
+                            if (navigator.getDisplayMedia) {
+                                navigator.getDisplayMedia({
+                                    video: true
+                                }).then(screenStream => {
+                                    config.onMediaCaptured(screenStream);
+                                    addStreamStopListener(screenStream, function() {
+                                    // config.onMediaStopped();
+                                    btnStartRecording.onclick();
+                                });
+                                    setVideoURL(screenStream, true);
+                                }).catch(function(error) {
+                                    config.onMediaCapturingFailed(error);
+                                });
+                                } else if (navigator.mediaDevices.getDisplayMedia) {
+                                    navigator.mediaDevices.getDisplayMedia({
+                                    video: true
+                                }).then(screenStream => {
+                                    config.onMediaCaptured(screenStream);
+                                    addStreamStopListener(screenStream, function() {
+                                    // config.onMediaStopped();
+                                    //btnStartRecording.onclick();
+                                });
+                                    setVideoURL(screenStream, true);
+                                }).catch(function(error) {
+                                    config.onMediaCapturingFailed(error);
+                                });
+                                } else {
+                                    var error = 'getDisplayMedia API are not supported in this browser.';
+                                    config.onMediaCapturingFailed(error);
+                                    alert(error);
+                                }
+                                }
+                                    
+                                    </script>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        <script>
+                        var btnPauseRecording = document.querySelector('#btn-pause-recording');
+                        btnPauseRecording.onclick = function() {
+                            if(!btnStartRecording.recordRTC) {
+                                btnPauseRecording.style.display = 'none';
+                                return;
+                            }
+                            btnPauseRecording.disabled = true;
+                            if(btnPauseRecording.innerHTML === 'Pause') {
+                                btnStartRecording.disabled = true;
+                                btnStartRecording.style.fontSize = '15px';
+                                btnStartRecording.recordRTC.pauseRecording();
+                                recordingPlayer.parentNode.parentNode.querySelector('h2').innerHTML = 'Recording status: paused';
+                                recordingPlayer.pause();
+                                btnPauseRecording.style.fontSize = 'inherit';
+                                setTimeout(function() {
+                                    btnPauseRecording.innerHTML = 'Resume Recording';
+                                    btnPauseRecording.disabled = false;
+                                }, 2000);
+                            }
+                            if(btnPauseRecording.innerHTML === 'Resume Recording') {
+                                btnStartRecording.disabled = false;
+                                btnStartRecording.style.fontSize = 'inherit';
+                                btnStartRecording.recordRTC.resumeRecording();
+                                recordingPlayer.parentNode.parentNode.querySelector('h2').innerHTML = '<img src="https://www.webrtc-experiment.com/images/progress.gif">';
+                                recordingPlayer.play();
+                                btnPauseRecording.style.fontSize = '15px';
+                                btnPauseRecording.innerHTML = 'Pause';
+                                setTimeout(function() {
+                                    btnPauseRecording.disabled = false;
+                                }, 2000);
+                            }
+                        };
+                        </script>
+                        
+                </apex:form>
+                        
+                        <!-- commits.js is useless for you! -->
+                
+            </html>
+        </apex:page>

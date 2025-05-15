@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>env_Namespace</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>env_Namespace</shortDescription>
+        <value>http://schemas.xmlsoap.org/soap/envelope/</value>
+    </labels>
+    <labels>
+        <fullName>ins_namespace</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>ins_namespace</shortDescription>
+        <value>http://www.w3.org/2001/XMLSchema-instance</value>
+    </labels>
+    <labels>
+        <fullName>meta_namespace</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>meta_namespace</shortDescription>
+        <value>http://soap.sforce.com/2006/04/metadata</value>
+    </labels>
+</CustomLabels>

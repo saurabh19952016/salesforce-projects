@@ -1,0 +1,65 @@
+<aura:component controller="dataUnarchivalLight" implements="force:hasSObjectName">
+    <aura:attribute name="filteredRecords" type="sObject[]"/>
+    <aura:attribute name="indexValue" type="Integer" default="0"/>
+    <aura:attribute name="Identifier" type="String"/>
+    <aura:attribute name="objectName" type="String"/>
+    <aura:attribute name="columns" type="List"/>  
+    <aura:attribute name="selectedFields" type="List"/>  
+    <aura:attribute name="selectedRows" type="sObject[]"/> 
+    <aura:attribute name="message" type="string"/>   
+    <aura:attribute name="type" type="string"/>   
+    <aura:attribute name="fieldList" type="List"/>    
+    <aura:handler name="oSelectedValueEvent" event="c:oSelectedValueEvent" action="{!c.handleFieldEvent}"/>
+    <aura:handler name="clearValueEvent" event="c:clearValueEvent" action="{!c.clearFields}"/>
+    <aura:if isTrue="{!v.message!='' &amp;&amp; v.message!=null}">
+        <div  class="{!'slds-notify slds-notify_alert slds-theme_alert-texture slds-text-align_left slds-theme_'+v.type}"  role="alert">
+            <lightning:icon variant="inverse" iconName="{!'utility:'+v.type}" size="medium" alternativeText="{!v.type}"/>&nbsp;
+            <span class="slds-text-body–regular">
+                <aura:unescapedHtml value="{!v.message}"/>
+            </span> 
+             <div class="slds-notify__close">
+            <lightning:icon iconName="utility:close"  variant="inverse" onclick="{!c.close}"/>
+        </div>
+        </div>
+       
+    </aura:if>
+    <lightning:card title="Data Unarchival" variant="Narrow"  class="slds-is-relative card" iconName="utility:email_open">
+        <lightning:spinner class="slds-hide" aura:id="spinner"/> 
+        
+        <div class="slds-box  slds-theme_shade slds-theme_alert-texture">
+            <div class="slds-p-around--small">
+                <c:searchComponent IconName="standard:sobject" selected="{!v.objectName}" label="Object Name"/>
+                <div class="{!v.objectName==null || v.objectName==''?'slds-hide':'slds-box slds-m-top--small'}" style="background-color:aliceblue">
+                    <lightning:layout verticalAlign="center">
+                        
+                        <lightning:layoutItem padding="around-small">
+                            
+                            <lightning:input value="{!v.Identifier}" label="Enter Record Name or Id"/>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                    <lightning:dualListbox class="slds-p-top--small" name="FieldList"  
+                                           label= "Select Fields to Display" 
+                                           sourceLabel="Available" 
+                                           selectedLabel="Selected" 
+                                           value="{!v.selectedFields}" 
+                                           options="{!v.fieldList}"/>
+                    <lightning:buttonGroup class="slds-m-top--small">
+                        <lightning:button aura:id="submitbutton" iconName="utility:forward" variant="brand" label="Submit" onclick="{!c.findRecords}"/>
+                        
+                        <lightning:button iconName="utility:email_open" label="Unarchive Records" onclick="{!c.unarchiveRecords}"/>
+                    </lightning:buttonGroup>
+                    <aura:if isTrue="{!v.filteredRecords.length!=0}">
+                        <div class="slds-m-around--small">
+                            <lightning:datatable  aura:id="dataTable"
+                                                 keyField="Id"
+                                                 data="{!v.filteredRecords}"
+                                                 columns="{! v.columns }"
+                                                 hideCheckboxColumn="false"
+                                                 maxRowSelection="1"/>
+                        </div>
+                    </aura:if>
+                </div>
+            </div>
+        </div>
+    </lightning:card>
+</aura:component>

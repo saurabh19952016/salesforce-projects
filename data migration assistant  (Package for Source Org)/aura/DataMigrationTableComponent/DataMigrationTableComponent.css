@@ -1,0 +1,55 @@
+@media print{
+    .THIS table {
+        zoom:50%;
+    }
+  .THIS tr{
+                page-break-after:always;
+
+    }
+    
+    .THIS th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        page-break-after:always;
+    }
+}
+.THIS .slds-th__action {
+	height:100px;
+}
+
+.THIS .slds-scrollable_y {
+	padding-top:37px;
+}
+.THIS .slds-truncate {
+    text-overflow: inherit;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word; 
+}
+
+/*@media print{
+    .THIS table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        page-break-after:always;
+    }
+    
+    .THIS td,.THIS th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        
+    }
+    .THIS tr{
+                page-break-after:always;
+
+    }
+    
+    .THIS th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        page-break-after:always;
+    }
+}*/
